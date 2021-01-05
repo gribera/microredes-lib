@@ -46,10 +46,10 @@ class Connection(object):
 		return ports
 
 	def sendCmd(self, id, comando):
-		# msg = can.Message(arbitration_id=id, data=comando, is_extended_id=False)
-		# self.bus.send(msg)
+		# comando = can.Message(arbitration_id=id, data=comando, is_extended_id=False)
+		# self.bus.send(comando)
 
-		self.bus.write(comando.encode())
+		self.bus.write(comando)
 		return self.readFromBus()
 
 	def readFromBus(self):

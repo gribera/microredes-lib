@@ -55,18 +55,18 @@ class Microredes(object):
 		dataHigh = arr[6:10][::-1]
 		envio = dataLow + dataHigh
 
-		self.conn.sendCmd(arbitrationId, envio)
+		return self.conn.sendCmd(arbitrationId, envio)
 
 	def doDigitalOut(self, pin, mode):
 		"""
 			Enciende/Apaga salida digital indicada.
 
-			pin: int, PIN [2-9]
-			mode: boolean, True enciende, False apaga
+			pin: int, PIN [2-9].
+			mode: boolean, True enciende, False apaga.
 		"""
 
 		if pin < 2 or pin > 9:
-			print('ERROR: Los pines digitales están comprendidos entre el 2-9')
+			print('ERROR: Los pines digitales están comprendidos entre el 2 y el 9')
 			return
 
 		msg = {
@@ -76,5 +76,169 @@ class Microredes(object):
 			'variable': int(self.variables['DIGITAL_OUT'], 0),
 			'data': [pin, int(mode), 0, 0, 0, 0]
 		}
+
 		self.canSend(self.genArray(msg))
-		# print(self.conn.sendCmd(msg)
+
+	def qryDigitalIn(self):
+		"""
+			Recupera estado de los pines digitales.
+		"""
+		msg = {
+			'function': int(self.functions['QRY'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['DIGITAL_IN'], 0),
+			'data': [0, 0, 0, 0, 0, 0]
+		}
+		return self.canSend(self.genArray(msg))
+
+	def doAnalogOut(self, pin, steps):
+		"""
+			Setea salida del DAC.
+
+			pin: int, PIN [0-1].
+			steps: int, Valor a setear como salida del DAC [0-4095].
+		"""
+		if pin < 0 or pin > 1:
+			print('ERROR: Los pines del DAC sólo pueden ser 0 o 1')
+			return
+
+		if steps < 0 or steps > 4095:
+			print('ERROR: El valor no puede ser mayor a 4095')
+			return
+
+		msg = {
+			'function': int(self.functions['DO'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['ANALOG_OUT'], 0),
+			'data': [pin, 0, 0, 0, 0, 0] # TODO: Pasar a bytes los steps
+		}
+
+		self.canSend(self.genArray(msg))
+
+	def qryDigitalOut(self, pin):
+		"""
+			Recupera valor del pin analógico pasado por parámetro.
+
+			pin: int, Pin a consultar el valor.
+		"""
+		if pin < 0 or pin > 7:
+			print('ERROR: Los pines analógicos están comprendidos entre el 0 y el 7')
+			return
+
+		msg = {
+			'function': int(self.functions['QRY'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['DIGITAL_OUT'], 0),
+			'data': [pin, 0, 0, 0, 0, 0]
+		}
+		return self.canSend(self.genArray(msg))
+
+	def setModoFunc(self, mode):
+		"""
+			Setea el modo de funcionamiento de la placa.
+
+			mode: int, Modo de trabajo de la placa.
+		"""
+		if pin < 0 or pin > 4:
+			print('ERROR: Los modos disponibles están comprendidos entre el 0 y el 4')
+			return
+
+		msg = {
+			'function': int(self.functions['SET'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['MODO_FUNC'], 0),
+			'data': [mode, 0, 0, 0, 0, 0]
+		}
+		self.canSend(self.genArray(msg))
+
+	def setAnalog(self, cantCan):
+		"""
+			Setea cantidad de canales analógicos.
+
+			cantCan: int, Cantidad de canales analógicos a habilitar [1-8].
+		"""
+		if pin < 1 or pin > 8:
+			print('ERROR: Los modos disponibles están comprendidos entre el 1 y el 8')
+			return
+
+		msg = {
+			'function': int(self.functions['SET'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['ANALOG'], 0),
+			'data': [cantCan, 0, 0, 0, 0, 0]
+		}
+		self.canSend(self.genArray(msg))
+
+	def setInAmp(self, cantCan):
+		"""
+			Setea cantidad de canales in-Amp.
+
+			cantCan: int, Cantidad de canales in-Amp a habilitar [1-4].
+		"""
+		if pin < 1 or pin > 4:
+			print('ERROR: Los modos disponibles están comprendidos entre el 1 y el 4')
+			return
+
+		msg = {
+			'function': int(self.functions['SET'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['IN-AMP'], 0),
+			'data': [cantCan, 0, 0, 0, 0, 0]
+		}
+		self.canSend(self.genArray(msg))
+
+	def setAmpInAmp(self, pin, amplification):
+		"""
+			Setea amplificación de canales in-Amp.
+
+			pin: int, Canal in-Amp a amplificar [9-12].
+			amplification: int, Amplificación [0-3].
+		"""
+		if pin < 9 or pin > 12:
+			print('ERROR: Los canales in-Amp están comprendidos entre el 9 y el 12')
+			return
+
+		if amplification < 0 or amplification > 3:
+			print('ERROR: La amplificación es un valor comprendido entre el 0 y el 3')
+			return
+
+		msg = {
+			'function': int(self.functions['SET'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['AMP-INAMP'], 0),
+			'data': [pin, amplification, 0, 0, 0, 0]
+		}
+		self.canSend(self.genArray(msg))
+
+	def doPwm(self, pin, duty):
+		"""
+			Habilita salida PWM.
+
+			pin: int, Canal in-Amp a amplificar [10-13].
+			duty: int, Duty-Cycle [0-255].
+		"""
+		if pin < 10 or pin > 13:
+			print('ERROR: Los pines PWM deben estar comprendidos entre el 10 y el 13')
+			return
+
+		if duty < 0 or duty > 255:
+			print('ERROR: El duty cycle debe ser un valor entre 0 y 255')
+			return
+
+		msg = {
+			'function': int(self.functions['DO'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['PWM'], 0),
+			'data': [pin, duty, 0, 0, 0, 0]
+		}
+		self.canSend(self.genArray(msg))
+
+

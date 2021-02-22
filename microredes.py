@@ -48,6 +48,15 @@ class Microredes(object):
 		arr = [msg['function'], msg['origin'], msg['target'], msg['variable']] + msg['data']
 		return arr
 
+	def genMsg(self, function, variable, data):
+		return {
+			'function': int(function, 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(variable, 0),
+			'data': data
+		}
+
 	def canSend(self, arr):
 		arbitrationId = (arr[0] << 5) | arr[1]
 
@@ -69,13 +78,8 @@ class Microredes(object):
 			print('ERROR: Los pines digitales están comprendidos entre el 2 y el 9')
 			return
 
-		msg = {
-			'function': int(self.functions['DO'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['DIGITAL_OUT'], 0),
-			'data': [pin, int(mode), 0, 0, 0, 0]
-		}
+		dataArray = [pin, int(mode), 0, 0, 0, 0]
+		msg = self.genMsg(self.functions['DO'], self.variables['DIGITAL_OUT'], dataArray)
 
 		self.canSend(self.genArray(msg))
 
@@ -83,13 +87,9 @@ class Microredes(object):
 		"""
 			Recupera estado de los pines digitales.
 		"""
-		msg = {
-			'function': int(self.functions['QRY'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['DIGITAL_IN'], 0),
-			'data': [0, 0, 0, 0, 0, 0]
-		}
+		dataArray = [0, 0, 0, 0, 0, 0]
+		msg = self.genMsg(self.functions['QRY'], self.variables['DIGITAL_IN'], dataArray)
+
 		return self.canSend(self.genArray(msg))
 
 	def qryAnalogIn(self, pin):
@@ -98,15 +98,10 @@ class Microredes(object):
 
 			pin: int, PIN [0-7].
 		"""
-		msg = {
-			'function': int(self.functions['QRY'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['ANALOG_IN'], 0),
-			'data': [pin, 0, 0, 0, 0, 0]
-		}
-		return self.canSend(self.genArray(msg))
+		dataArray = [pin, 0, 0, 0, 0, 0]
+		msg = self.genMsg(self.functions['QRY'], self.variables['ANALOG_IN'], dataArray)
 
+		return self.canSend(self.genArray(msg))
 
 	def doAnalogOut(self, pin, steps):
 		"""
@@ -123,13 +118,8 @@ class Microredes(object):
 			print('ERROR: El valor no puede ser mayor a 4095')
 			return
 
-		msg = {
-			'function': int(self.functions['DO'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['ANALOG_OUT'], 0),
-			'data': [pin, 0, 0, 0, 0, 0] # TODO: Pasar a bytes los steps
-		}
+		dataArray = [pin, 0, 0, 0, 0, 0] # TODO: Pasar a bytes los steps
+		msg = self.genMsg(self.functions['DO'], self.variables['ANALOG_OUT'], dataArray)
 
 		self.canSend(self.genArray(msg))
 
@@ -143,13 +133,9 @@ class Microredes(object):
 			print('ERROR: Los modos disponibles están comprendidos entre el 0 y el 4')
 			return
 
-		msg = {
-			'function': int(self.functions['SET'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['MODO_FUNC'], 0),
-			'data': [mode, 0, 0, 0, 0, 0]
-		}
+		dataArray = [mode, 0, 0, 0, 0, 0]
+		msg = self.genMsg(self.functions['SET'], self.variables['MODO_FUNC'], dataArray)
+
 		self.canSend(self.genArray(msg))
 
 	def setAnalog(self, cantCan):
@@ -162,13 +148,9 @@ class Microredes(object):
 			print('ERROR: Los modos disponibles están comprendidos entre el 1 y el 8')
 			return
 
-		msg = {
-			'function': int(self.functions['SET'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['ANALOG'], 0),
-			'data': [cantCan, 0, 0, 0, 0, 0]
-		}
+		dataArray = [cantCan, 0, 0, 0, 0, 0]
+		msg = self.genMsg(self.functions['SET'], self.variables['ANALOG'], dataArray)
+
 		self.canSend(self.genArray(msg))
 
 	def setInAmp(self, cantCan):
@@ -181,13 +163,9 @@ class Microredes(object):
 			print('ERROR: Los modos disponibles están comprendidos entre el 1 y el 4')
 			return
 
-		msg = {
-			'function': int(self.functions['SET'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['IN-AMP'], 0),
-			'data': [cantCan, 0, 0, 0, 0, 0]
-		}
+		dataArray = [cantCan, 0, 0, 0, 0, 0]
+		msg = self.genMsg(self.functions['SET'], self.variables['IN-AMP'], dataArray)
+
 		self.canSend(self.genArray(msg))
 
 	def setAmpInAmp(self, pin, amp):
@@ -205,13 +183,9 @@ class Microredes(object):
 			print('ERROR: La amplificación es un valor comprendido entre el 0 y el 3')
 			return
 
-		msg = {
-			'function': int(self.functions['SET'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['AMP-INAMP'], 0),
-			'data': [pin, amp, 0, 0, 0, 0]
-		}
+		dataArray = [pin, amp, 0, 0, 0, 0]
+		msg = self.genMsg(self.functions['SET'], self.variables['AMP-INAMP'], dataArray)
+
 		self.canSend(self.genArray(msg))
 
 	def doPwm(self, pin, duty):
@@ -229,13 +203,9 @@ class Microredes(object):
 			print('ERROR: El duty cycle debe ser un valor entre 0 y 255')
 			return
 
-		msg = {
-			'function': int(self.functions['DO'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['PWM'], 0),
-			'data': [pin, duty, 0, 0, 0, 0]
-		}
+		dataArray = [pin, duty, 0, 0, 0, 0]
+		msg = self.genMsg(self.functions['DO'], self.variables['PWM'], dataArray)
+
 		self.canSend(self.genArray(msg))
 
 	def hbEcho(self, char):
@@ -249,13 +219,8 @@ class Microredes(object):
 			print('ERROR: El valor de estar comprendido entre 0 y 127')
 			return
 
-		msg = {
-			'function': int(self.functions['HB'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['ECHO'], 0),
-			'data': [char, 0, 0, 0, 0, 0]
-		}
+		dataArray = [char, 0, 0, 0, 0, 0]
+		msg = self.genMsg(self.functions['HB'], self.variables['ECHO'], dataArray)
 
 		return(self.canSend(self.genArray(msg)))
 
@@ -284,34 +249,23 @@ class Microredes(object):
 			print('ERROR: Formato de hora incorrecto')
 			return
 
-		msg = {
-			'function': int(self.functions['SET'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['ECHO'], 0),
-			'data': [int(hh[0]), int(hh[1]), int(MM[0]), int(MM[1]), int(ss[0]), int(ss[1])]
-		}
+		# Hora
+		dataArray = [int(hh[0]), int(hh[1]), int(MM[0]), int(MM[1]), int(ss[0]), int(ss[1])]
+		msg = self.genMsg(self.functions['SET'], self.variables['RTC'], dataArray)
+
+		# Fecha
 		self.canSend(self.genArray(msg))
-		msg = {
-			'function': int(self.functions['SET'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['ECHO'], 0),
-			'data': [int(dd[0]), int(dd[1]), int(mm[0]), int(mm[1]), int(aa[0]), int(aa[1])]
-		}
+		dataArray = [int(dd[0]), int(dd[1]), int(mm[0]), int(mm[1]), int(aa[0]), int(aa[1])]
+		msg = self.genMsg(self.functions['SET'], self.variables['RTC'], dataArray)
+
 		self.canSend(self.genArray(msg))
 
 	def qryRTC(self):
 		"""
 			Recupera fecha y hora del RTC del equipo.
 		"""
-		msg = {
-			'function': int(self.functions['QRY'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['RTC'], 0),
-			'data': [0, 0, 0, 0, 0, 0]
-		}
+		dataArray = [0, 0, 0, 0, 0, 0]
+		msg = self.genMsg(self.functions['QRY'], self.variables['RTC'], dataArray)
 
 		return(self.canSend(self.genArray(msg)))
 
@@ -319,24 +273,16 @@ class Microredes(object):
 		"""
 			Detiene todas las interrupciones y lecturas del equipo.
 		"""
-		msg = {
-			'function': int(self.functions['DO'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['PARADA'], 0),
-			'data': [0, 0, 0, 0, 0, 0]
-		}
+		dataArray = [0, 0, 0, 0, 0, 0]
+		msg = self.genMsg(self.functions['DO'], self.variables['PARADA'], dataArray)
+
 		self.canSend(self.genArray(msg))
 
 	def doSoftReset(self):
 		"""
 			Reinicia el equipo.
 		"""
-		msg = {
-			'function': int(self.functions['DO'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['SOFT_RESET'], 0),
-			'data': [0, 0, 0, 0, 0, 0]
-		}
+		dataArray = [0, 0, 0, 0, 0, 0]
+		msg = self.genMsg(self.functions['DO'], self.variables['SOFT_RESET'], dataArray)
+
 		self.canSend(self.genArray(msg))

@@ -11,7 +11,7 @@ class Microredes(object):
                     'ANALOG_OUT': '0x02', 'ANALOG_IN': '0x03',
                     'MODO_FUNC': '0x04', 'ANALOG': '0x05', 'IN-AMP': '0x06',
                     'AMP-INAMP': '0x07','PWM': '0x08', 'ECHO': '0x09',
-                    'RTC1': '0x0A', 'PARADA': '0x0B', 'SOFT_RESET': '0x0C',
+                    'RTC': '0x0A', 'PARADA': '0x0B', 'SOFT_RESET': '0x0C',
                     'U_A': '0x10', 'U_B': '0x11', 'U_C': '0x12',
                     'I_A': '0x13', 'I_B': '0x14', 'I_C': '0x15', 'I_N1': '0x16',
                     'PA_A': '0x17', 'PA_B': '0x18', 'PA_C': '0x19', 'PA_TOT': '0x1A',
@@ -92,6 +92,22 @@ class Microredes(object):
 		}
 		return self.canSend(self.genArray(msg))
 
+	def qryAnalogIn(self, pin):
+		"""
+			Recupera valor del pin analógico pasado por parámetro.
+
+			pin: int, PIN [0-7].
+		"""
+		msg = {
+			'function': int(self.functions['QRY'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['ANALOG_IN'], 0),
+			'data': [pin, 0, 0, 0, 0, 0]
+		}
+		return self.canSend(self.genArray(msg))
+
+
 	def doAnalogOut(self, pin, steps):
 		"""
 			Setea salida del DAC.
@@ -117,30 +133,11 @@ class Microredes(object):
 
 		self.canSend(self.genArray(msg))
 
-	def qryDigitalOut(self, pin):
-		"""
-			Recupera valor del pin analógico pasado por parámetro.
-
-			pin: int, Pin a consultar el valor.
-		"""
-		if pin < 0 or pin > 7:
-			print('ERROR: Los pines analógicos están comprendidos entre el 0 y el 7')
-			return
-
-		msg = {
-			'function': int(self.functions['QRY'], 0),
-			'origin': self.masterAddr,
-			'target': self.addr,
-			'variable': int(self.variables['DIGITAL_OUT'], 0),
-			'data': [pin, 0, 0, 0, 0, 0]
-		}
-		return self.canSend(self.genArray(msg))
-
 	def setModoFunc(self, mode):
 		"""
 			Setea el modo de funcionamiento de la placa.
 
-			mode: int, Modo de trabajo de la placa.
+			mode: int, Modo de trabajo de la placa [0-4].
 		"""
 		if pin < 0 or pin > 4:
 			print('ERROR: Los modos disponibles están comprendidos entre el 0 y el 4')
@@ -193,18 +190,18 @@ class Microredes(object):
 		}
 		self.canSend(self.genArray(msg))
 
-	def setAmpInAmp(self, pin, amplification):
+	def setAmpInAmp(self, pin, amp):
 		"""
 			Setea amplificación de canales in-Amp.
 
 			pin: int, Canal in-Amp a amplificar [9-12].
-			amplification: int, Amplificación [0-3].
+			amp: int, Amplificación [0-3].
 		"""
 		if pin < 9 or pin > 12:
 			print('ERROR: Los canales in-Amp están comprendidos entre el 9 y el 12')
 			return
 
-		if amplification < 0 or amplification > 3:
+		if amp < 0 or amp > 3:
 			print('ERROR: La amplificación es un valor comprendido entre el 0 y el 3')
 			return
 
@@ -213,7 +210,7 @@ class Microredes(object):
 			'origin': self.masterAddr,
 			'target': self.addr,
 			'variable': int(self.variables['AMP-INAMP'], 0),
-			'data': [pin, amplification, 0, 0, 0, 0]
+			'data': [pin, amp, 0, 0, 0, 0]
 		}
 		self.canSend(self.genArray(msg))
 
@@ -221,7 +218,7 @@ class Microredes(object):
 		"""
 			Habilita salida PWM.
 
-			pin: int, Canal in-Amp a amplificar [10-13].
+			pin: int, Pin de salida [10-13].
 			duty: int, Duty-Cycle [0-255].
 		"""
 		if pin < 10 or pin > 13:
@@ -241,4 +238,90 @@ class Microredes(object):
 		}
 		self.canSend(self.genArray(msg))
 
+	def hbEcho(self, char):
+		"""
+			Devuelve el mismo valor pasado por parámetro. Sirve a modo de heartbeat.
 
+			char: int, Valor [0-127].
+		"""
+
+		if char < 0 or char > 255:
+			print('ERROR: El valor de estar comprendido entre 0 y 127')
+			return
+
+		msg = {
+			'function': int(self.functions['HB'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['ECHO'], 0),
+			'data': [char, 0, 0, 0, 0, 0]
+		}
+
+		return(self.canSend(self.genArray(msg)))
+
+	def setRTC(self, date, hour): # TODO: Terminar esta función
+		"""
+			Setea la fecha y hora en el RTC del equipo.
+
+			date: string, Fecha en formato dd/mm/AAAA.
+			hour: string, Hora en formato hh:mm:ss.
+		"""
+		parsedDate = date.split('/')
+		parsedHour = hour.split(':')
+
+		if (len(date) != 3):
+			print('ERROR: Formato de fecha incorrecto')
+			return
+
+		if (len(hour) != 3):
+			print('ERROR: Formato de hora incorrecto')
+			return
+
+		msg = {
+			'function': int(self.functions['SET'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['ECHO'], 0),
+			'data': [char, 0, 0, 0, 0, 0]
+		}
+		self.canSend(self.genArray(msg))
+
+	def qryRTC(self):
+		"""
+			Recupera fecha y hora del RTC del equipo.
+		"""
+		msg = {
+			'function': int(self.functions['QRY'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['RTC'], 0),
+			'data': [0, 0, 0, 0, 0, 0]
+		}
+
+		return(self.canSend(self.genArray(msg)))
+
+	def doParada(self):
+		"""
+			Detiene todas las interrupciones y lecturas del equipo.
+		"""
+		msg = {
+			'function': int(self.functions['DO'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['PARADA'], 0),
+			'data': [0, 0, 0, 0, 0, 0]
+		}
+		self.canSend(self.genArray(msg))
+
+	def doSoftReset(self):
+		"""
+			Reinicia el equipo.
+		"""
+		msg = {
+			'function': int(self.functions['DO'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['SOFT_RESET'], 0),
+			'data': [0, 0, 0, 0, 0, 0]
+		}
+		self.canSend(self.genArray(msg))

@@ -263,17 +263,24 @@ class Microredes(object):
 		"""
 			Setea la fecha y hora en el RTC del equipo.
 
-			date: string, Fecha en formato dd/mm/AAAA.
+			date: string, Fecha en formato dd/mm/aa.
 			hour: string, Hora en formato hh:mm:ss.
 		"""
 		parsedDate = date.split('/')
 		parsedHour = hour.split(':')
+		dd, mm, aa = parsedDate
+		hh, MM, ss = parsedHour
 
-		if (len(date) != 3):
+		if ((len(parsedDate) != 3) or
+			(int(dd) > 31 or int(dd) < 1) or
+			(int(mm) > 12 or int(mm) < 1)):
 			print('ERROR: Formato de fecha incorrecto')
 			return
 
-		if (len(hour) != 3):
+		if ((len(parsedHour) != 3) or
+			(int(hh) > 24 or int(hh) < 1) or
+			(int(MM) > 60 or int(MM) < 0) or
+			(int(ss) > 60 or int(ss) < 0)):
 			print('ERROR: Formato de hora incorrecto')
 			return
 
@@ -282,7 +289,15 @@ class Microredes(object):
 			'origin': self.masterAddr,
 			'target': self.addr,
 			'variable': int(self.variables['ECHO'], 0),
-			'data': [char, 0, 0, 0, 0, 0]
+			'data': [int(hh[0]), int(hh[1]), int(MM[0]), int(MM[1]), int(ss[0]), int(ss[1])]
+		}
+		self.canSend(self.genArray(msg))
+		msg = {
+			'function': int(self.functions['SET'], 0),
+			'origin': self.masterAddr,
+			'target': self.addr,
+			'variable': int(self.variables['ECHO'], 0),
+			'data': [int(dd[0]), int(dd[1]), int(mm[0]), int(mm[1]), int(aa[0]), int(aa[1])]
 		}
 		self.canSend(self.genArray(msg))
 

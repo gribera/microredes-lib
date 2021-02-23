@@ -15,5 +15,5 @@
 | SET | setAnalog | **cantCan** (int) Cantidad de canales analógicos a habilitar [1-8] | Setea cantidad de canales analógicos. |
 | SET | setInAmp | **cantCan** (int) Cantidad de canales in-Amp a habilitar | Setea cantidad de canales in-Amp. |
 | SET | setAmpInAmp | **pin** (int) Canal in-Amp a amplificar [9-12] <br/> **amp** (int) Amplificación [0-3] (int) Amplificación| Setea amplificación de canales in-Amp. |
-| SET | setRTC | **fecha** (string) Fecha en formato dd/mm/AAAA. <br/> **hora** (string) Hora en formato hh:mm:ss | Setea la fecha y hora en el RTC del equipo. |
+| SET | setRTC | **fecha** (string) Fecha en formato dd/mm/aa. <br/> **hora** (string) Hora en formato hh:mm:ss | Setea la fecha y hora en el RTC del equipo. |
 | HB | hbEcho | **val** (int) Valor [0-127] | Devuelve el mismo valor pasado por parámetro. Sirve a modo de heartbeat. |

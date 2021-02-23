@@ -48,7 +48,7 @@ class Microredes(object):
 		arr = [msg['function'], msg['origin'], msg['target'], msg['variable']] + msg['data']
 		return arr
 
-	def genMsg(self, function, variable, data):
+	def genMsg(self, function, variable, data = [0, 0, 0, 0, 0, 0]):
 		return {
 			'function': int(function, 0),
 			'origin': self.masterAddr,
@@ -73,7 +73,6 @@ class Microredes(object):
 			pin: int, PIN [2-9].
 			mode: boolean, True enciende, False apaga.
 		"""
-
 		if pin < 2 or pin > 9:
 			print('ERROR: Los pines digitales están comprendidos entre el 2 y el 9')
 			return
@@ -87,8 +86,7 @@ class Microredes(object):
 		"""
 			Recupera estado de los pines digitales.
 		"""
-		dataArray = [0, 0, 0, 0, 0, 0]
-		msg = self.genMsg(self.functions['QRY'], self.variables['DIGITAL_IN'], dataArray)
+		msg = self.genMsg(self.functions['QRY'], self.variables['DIGITAL_IN'])
 
 		return self.canSend(self.genArray(msg))
 
@@ -214,7 +212,6 @@ class Microredes(object):
 
 			char: int, Valor [0-127].
 		"""
-
 		if char < 0 or char > 255:
 			print('ERROR: El valor de estar comprendido entre 0 y 127')
 			return
@@ -264,8 +261,7 @@ class Microredes(object):
 		"""
 			Recupera fecha y hora del RTC del equipo.
 		"""
-		dataArray = [0, 0, 0, 0, 0, 0]
-		msg = self.genMsg(self.functions['QRY'], self.variables['RTC'], dataArray)
+		msg = self.genMsg(self.functions['QRY'], self.variables['RTC'])
 
 		return(self.canSend(self.genArray(msg)))
 
@@ -273,8 +269,7 @@ class Microredes(object):
 		"""
 			Detiene todas las interrupciones y lecturas del equipo.
 		"""
-		dataArray = [0, 0, 0, 0, 0, 0]
-		msg = self.genMsg(self.functions['DO'], self.variables['PARADA'], dataArray)
+		msg = self.genMsg(self.functions['DO'], self.variables['PARADA'])
 
 		self.canSend(self.genArray(msg))
 
@@ -282,7 +277,6 @@ class Microredes(object):
 		"""
 			Reinicia el equipo.
 		"""
-		dataArray = [0, 0, 0, 0, 0, 0]
-		msg = self.genMsg(self.functions['DO'], self.variables['SOFT_RESET'], dataArray)
+		msg = self.genMsg(self.functions['DO'], self.variables['SOFT_RESET'])
 
 		self.canSend(self.genArray(msg))

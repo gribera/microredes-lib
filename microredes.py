@@ -1,28 +1,7 @@
 import connection as conn
+from constants import masterAddr, functions, variables
 
 class Microredes(object):
-	masterAddr = 1
-
-	functions = {'ERR': '0x01', 'DO': '0x04', 'SET': '0x08',
-				 'QRY': '0x0c', 'ACK': '0x10', 'POST': '0x14',
-				 'HB': '0x18'}
-
-	variables = {'DIGITAL_OUT': '0x00', 'DIGITAL_IN': '0x01',
-                    'ANALOG_OUT': '0x02', 'ANALOG_IN': '0x03',
-                    'MODO_FUNC': '0x04', 'ANALOG': '0x05', 'IN-AMP': '0x06',
-                    'AMP-INAMP': '0x07','PWM': '0x08', 'ECHO': '0x09',
-                    'RTC': '0x0A', 'PARADA': '0x0B', 'SOFT_RESET': '0x0C',
-                    'U_A': '0x10', 'U_B': '0x11', 'U_C': '0x12',
-                    'I_A': '0x13', 'I_B': '0x14', 'I_C': '0x15', 'I_N1': '0x16',
-                    'PA_A': '0x17', 'PA_B': '0x18', 'PA_C': '0x19', 'PA_TOT': '0x1A',
-                    'PR_A': '0x1B', 'PR_B': '0x1C', 'PR_C': '0x1D', 'PR_TOT': '0x1E',
-                    'PS_A': '0x1F', 'PS_B': '0x20', 'PS_C': '0x21', 'PS_TOT': '0x22',
-                    'FP_A': '0x23', 'FP_B': '0x24', 'FP_C': '0x25', 'FP_TOT': '0x26',
-                    'THDU_A': '0x27', 'THDU_B': '0x28', 'THDU_C': '0x29',
-                    'THDI_A': '0x2A', 'THDI_B': '0x2B', 'THDI_C': '0x2C',
-                    'FREC': '0x2D', 'TEMP': '0x2E'}
-
-
 	def __init__(self, addr, equipo):
 		self.addr = addr
 		self.equipo = equipo
@@ -51,7 +30,7 @@ class Microredes(object):
 	def genMsg(self, function, variable, data = [0, 0, 0, 0, 0, 0]):
 		return {
 			'function': int(function, 0),
-			'origin': self.masterAddr,
+			'origin': masterAddr,
 			'target': self.addr,
 			'variable': int(variable, 0),
 			'data': data
@@ -78,7 +57,7 @@ class Microredes(object):
 			return
 
 		dataArray = [pin, int(mode), 0, 0, 0, 0]
-		msg = self.genMsg(self.functions['DO'], self.variables['DIGITAL_OUT'], dataArray)
+		msg = self.genMsg(functions['DO'], variables['DIGITAL_OUT'], dataArray)
 
 		self.canSend(self.genArray(msg))
 
@@ -86,7 +65,7 @@ class Microredes(object):
 		"""
 			Recupera estado de los pines digitales.
 		"""
-		msg = self.genMsg(self.functions['QRY'], self.variables['DIGITAL_IN'])
+		msg = self.genMsg(functions['QRY'], variables['DIGITAL_IN'])
 
 		return self.canSend(self.genArray(msg))
 
@@ -97,7 +76,7 @@ class Microredes(object):
 			pin: int, PIN [0-7].
 		"""
 		dataArray = [pin, 0, 0, 0, 0, 0]
-		msg = self.genMsg(self.functions['QRY'], self.variables['ANALOG_IN'], dataArray)
+		msg = self.genMsg(functions['QRY'], variables['ANALOG_IN'], dataArray)
 
 		return self.canSend(self.genArray(msg))
 
@@ -117,7 +96,7 @@ class Microredes(object):
 			return
 
 		dataArray = [pin, 0, 0, 0, 0, 0] # TODO: Pasar a bytes los steps
-		msg = self.genMsg(self.functions['DO'], self.variables['ANALOG_OUT'], dataArray)
+		msg = self.genMsg(functions['DO'], variables['ANALOG_OUT'], dataArray)
 
 		self.canSend(self.genArray(msg))
 
@@ -132,7 +111,7 @@ class Microredes(object):
 			return
 
 		dataArray = [mode, 0, 0, 0, 0, 0]
-		msg = self.genMsg(self.functions['SET'], self.variables['MODO_FUNC'], dataArray)
+		msg = self.genMsg(functions['SET'], variables['MODO_FUNC'], dataArray)
 
 		self.canSend(self.genArray(msg))
 
@@ -147,7 +126,7 @@ class Microredes(object):
 			return
 
 		dataArray = [cantCan, 0, 0, 0, 0, 0]
-		msg = self.genMsg(self.functions['SET'], self.variables['ANALOG'], dataArray)
+		msg = self.genMsg(functions['SET'], variables['ANALOG'], dataArray)
 
 		self.canSend(self.genArray(msg))
 
@@ -162,7 +141,7 @@ class Microredes(object):
 			return
 
 		dataArray = [cantCan, 0, 0, 0, 0, 0]
-		msg = self.genMsg(self.functions['SET'], self.variables['IN-AMP'], dataArray)
+		msg = self.genMsg(functions['SET'], variables['IN-AMP'], dataArray)
 
 		self.canSend(self.genArray(msg))
 
@@ -182,7 +161,7 @@ class Microredes(object):
 			return
 
 		dataArray = [pin, amp, 0, 0, 0, 0]
-		msg = self.genMsg(self.functions['SET'], self.variables['AMP-INAMP'], dataArray)
+		msg = self.genMsg(functions['SET'], variables['AMP-INAMP'], dataArray)
 
 		self.canSend(self.genArray(msg))
 
@@ -202,7 +181,7 @@ class Microredes(object):
 			return
 
 		dataArray = [pin, duty, 0, 0, 0, 0]
-		msg = self.genMsg(self.functions['DO'], self.variables['PWM'], dataArray)
+		msg = self.genMsg(functions['DO'], variables['PWM'], dataArray)
 
 		self.canSend(self.genArray(msg))
 
@@ -217,7 +196,7 @@ class Microredes(object):
 			return
 
 		dataArray = [char, 0, 0, 0, 0, 0]
-		msg = self.genMsg(self.functions['HB'], self.variables['ECHO'], dataArray)
+		msg = self.genMsg(functions['HB'], variables['ECHO'], dataArray)
 
 		return(self.canSend(self.genArray(msg)))
 
@@ -248,12 +227,12 @@ class Microredes(object):
 
 		# Hora
 		dataArray = [int(hh[0]), int(hh[1]), int(MM[0]), int(MM[1]), int(ss[0]), int(ss[1])]
-		msg = self.genMsg(self.functions['SET'], self.variables['RTC'], dataArray)
+		msg = self.genMsg(functions['SET'], variables['RTC'], dataArray)
 
 		# Fecha
 		self.canSend(self.genArray(msg))
 		dataArray = [int(dd[0]), int(dd[1]), int(mm[0]), int(mm[1]), int(aa[0]), int(aa[1])]
-		msg = self.genMsg(self.functions['SET'], self.variables['RTC'], dataArray)
+		msg = self.genMsg(functions['SET'], variables['RTC'], dataArray)
 
 		self.canSend(self.genArray(msg))
 
@@ -261,7 +240,7 @@ class Microredes(object):
 		"""
 			Recupera fecha y hora del RTC del equipo.
 		"""
-		msg = self.genMsg(self.functions['QRY'], self.variables['RTC'])
+		msg = self.genMsg(functions['QRY'], variables['RTC'])
 
 		return(self.canSend(self.genArray(msg)))
 
@@ -269,7 +248,7 @@ class Microredes(object):
 		"""
 			Detiene todas las interrupciones y lecturas del equipo.
 		"""
-		msg = self.genMsg(self.functions['DO'], self.variables['PARADA'])
+		msg = self.genMsg(functions['DO'], variables['PARADA'])
 
 		self.canSend(self.genArray(msg))
 
@@ -277,6 +256,6 @@ class Microredes(object):
 		"""
 			Reinicia el equipo.
 		"""
-		msg = self.genMsg(self.functions['DO'], self.variables['SOFT_RESET'])
+		msg = self.genMsg(functions['DO'], variables['SOFT_RESET'])
 
 		self.canSend(self.genArray(msg))

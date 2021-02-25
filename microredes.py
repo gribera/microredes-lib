@@ -45,6 +45,11 @@ class Microredes(object):
 
 		return self.conn.sendCmd(arbitrationId, envio)
 
+	def execQuery(self, msg):
+		queryArray = self.genArray(msg)
+		response = self.canSend(queryArray)
+		return response
+
 	def doDigitalOut(self, pin, mode):
 		"""
 			Enciende/Apaga salida digital indicada.
@@ -59,7 +64,7 @@ class Microredes(object):
 		dataArray = [pin, int(mode), 0, 0, 0, 0]
 		msg = self.genMsg(functions['DO'], variables['DIGITAL_OUT'], dataArray)
 
-		self.canSend(self.genArray(msg))
+		self.execQuery(msg)
 
 	def qryDigitalIn(self):
 		"""
@@ -67,7 +72,7 @@ class Microredes(object):
 		"""
 		msg = self.genMsg(functions['QRY'], variables['DIGITAL_IN'])
 
-		return self.canSend(self.genArray(msg))
+		return self.execQuery(msg)
 
 	def qryAnalogIn(self, pin):
 		"""
@@ -78,7 +83,7 @@ class Microredes(object):
 		dataArray = [pin, 0, 0, 0, 0, 0]
 		msg = self.genMsg(functions['QRY'], variables['ANALOG_IN'], dataArray)
 
-		return self.canSend(self.genArray(msg))
+		return self.execQuery(msg)
 
 	def doAnalogOut(self, pin, steps):
 		"""
@@ -98,7 +103,7 @@ class Microredes(object):
 		dataArray = [pin, 0, 0, 0, 0, 0] # TODO: Pasar a bytes los steps
 		msg = self.genMsg(functions['DO'], variables['ANALOG_OUT'], dataArray)
 
-		self.canSend(self.genArray(msg))
+		self.execQuery(msg)
 
 	def setModoFunc(self, mode):
 		"""
@@ -113,7 +118,7 @@ class Microredes(object):
 		dataArray = [mode, 0, 0, 0, 0, 0]
 		msg = self.genMsg(functions['SET'], variables['MODO_FUNC'], dataArray)
 
-		self.canSend(self.genArray(msg))
+		self.execQuery(msg)
 
 	def setAnalog(self, cantCan):
 		"""
@@ -128,7 +133,7 @@ class Microredes(object):
 		dataArray = [cantCan, 0, 0, 0, 0, 0]
 		msg = self.genMsg(functions['SET'], variables['ANALOG'], dataArray)
 
-		self.canSend(self.genArray(msg))
+		self.execQuery(msg)
 
 	def setInAmp(self, cantCan):
 		"""
@@ -143,7 +148,7 @@ class Microredes(object):
 		dataArray = [cantCan, 0, 0, 0, 0, 0]
 		msg = self.genMsg(functions['SET'], variables['IN-AMP'], dataArray)
 
-		self.canSend(self.genArray(msg))
+		self.execQuery(msg)
 
 	def setAmpInAmp(self, pin, amp):
 		"""
@@ -163,7 +168,7 @@ class Microredes(object):
 		dataArray = [pin, amp, 0, 0, 0, 0]
 		msg = self.genMsg(functions['SET'], variables['AMP-INAMP'], dataArray)
 
-		self.canSend(self.genArray(msg))
+		self.execQuery(msg)
 
 	def doPwm(self, pin, duty):
 		"""
@@ -183,7 +188,7 @@ class Microredes(object):
 		dataArray = [pin, duty, 0, 0, 0, 0]
 		msg = self.genMsg(functions['DO'], variables['PWM'], dataArray)
 
-		self.canSend(self.genArray(msg))
+		self.execQuery(msg)
 
 	def hbEcho(self, char):
 		"""
@@ -198,7 +203,7 @@ class Microredes(object):
 		dataArray = [char, 0, 0, 0, 0, 0]
 		msg = self.genMsg(functions['HB'], variables['ECHO'], dataArray)
 
-		return(self.canSend(self.genArray(msg)))
+		return self.execQuery(msg)
 
 	def setRTC(self, date, hour): # TODO: Terminar esta función
 		"""
@@ -230,11 +235,11 @@ class Microredes(object):
 		msg = self.genMsg(functions['SET'], variables['RTC'], dataArray)
 
 		# Fecha
-		self.canSend(self.genArray(msg))
+		self.execQuery(msg)
 		dataArray = [int(dd[0]), int(dd[1]), int(mm[0]), int(mm[1]), int(aa[0]), int(aa[1])]
 		msg = self.genMsg(functions['SET'], variables['RTC'], dataArray)
 
-		self.canSend(self.genArray(msg))
+		self.execQuery(msg)
 
 	def qryRTC(self):
 		"""
@@ -242,7 +247,7 @@ class Microredes(object):
 		"""
 		msg = self.genMsg(functions['QRY'], variables['RTC'])
 
-		return(self.canSend(self.genArray(msg)))
+		return self.execQuery(msg)
 
 	def doParada(self):
 		"""
@@ -250,7 +255,7 @@ class Microredes(object):
 		"""
 		msg = self.genMsg(functions['DO'], variables['PARADA'])
 
-		self.canSend(self.genArray(msg))
+		self.execQuery(msg)
 
 	def doSoftReset(self):
 		"""
@@ -258,4 +263,4 @@ class Microredes(object):
 		"""
 		msg = self.genMsg(functions['DO'], variables['SOFT_RESET'])
 
-		self.canSend(self.genArray(msg))
+		self.execQuery(msg)

@@ -14,7 +14,7 @@ def singleton(cls):
 @singleton
 class Connection(object):
 	bus = None
-	canListener = None
+	can_listener = None
 	notifier = None
 	connected = False
 	timeout = 0.01
@@ -25,55 +25,55 @@ class Connection(object):
 	def connect(self, port, baudrate, bitrate=250000):
 		self.bus = can.interface.Bus(bustype='robotell', channel=port, ttyBaudrate=baudrate, bitrate=bitrate)
 		self.connected = True
-		self.initCanListener()
+		self.init_can_listener()
 
-	def isConnected(self):
+	def is_connected(self):
 		return self.connected
 
-	def setTimeout(self, timeout):
+	def set_timeout(self, timeout):
 		self.timeout = timeout
 
-	def closePort(self):
+	def close_port(self):
 		self.connected = False
 		self.bus.close()
 
-	def initCanListener(self):
-		self.canListener = can.BufferedReader()
-		self.notifier = can.Notifier(self.bus, [self.canListener])
+	def init_can_listener(self):
+		self.can_listener = can.BufferedReader()
+		self.notifier = can.Notifier(self.bus, [self.can_listener])
 
-	def stopCanListener(self):
-		self.canListener.stop()
+	def stop_can_listener(self):
+		self.can_listener.stop()
 		self.notifier.stop()
 
-	def getPorts(self):
+	def get_ports(self):
 		ports = []
 		for x in serial.tools.list_ports.comports():
 			ports.append(x.device)
 
 		return ports
 
-	def sendCmd(self, id, query, interval=0):
+	def send_cmd(self, id, query, interval=0):
 		msg = can.Message(arbitration_id=id, data=query, is_extended_id=False)
 		if interval > 0:
 			self.bus.send_periodic(msg, interval)
 		else:
 			self.bus.send(msg)
 
-	def readFromBus(self):
-		arrData = []
+	def read_from_bus(self):
+		arr_data = []
 		timeout = time.time() + self.timeout
 		while time.time() < timeout:
-		    msg = self.canListener.get_message(self.timeout)
+		    msg = self.can_listener.get_message(self.timeout)
 
 		    if msg is None:
 		    	break
 
-		    arrData.append(msg)
+		    arr_data.append(msg)
 
-		return arrData
+		return arr_data
 
 
-	def getPorts(self):
+	def get_ports(self):
 		ports = []
 		for x in serial.tools.list_ports.comports():
 		    ports.append(x.device)

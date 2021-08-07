@@ -1,4 +1,4 @@
-masterAddr = 1
+master_address = 1
 
 functions = {'ERR': '0x01', 'DO': '0x04', 'SET': '0x08',
 			 'QRY': '0x0c', 'ACK': '0x10', 'POST': '0x14',

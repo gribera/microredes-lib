@@ -1,5 +1,5 @@
 import connection as conn
-from constants import masterAddr, functions, variables
+from constants import master_address, functions, variables
 
 class Microredes(object):
 	def __init__(self, addr, equipo):
@@ -11,7 +11,7 @@ class Microredes(object):
 		attr = object.__getattribute__(self, name)
 		if hasattr(attr, '__call__'):
 			def newfunc(*args, **kwargs):
-				if not self.conn.isConnected() and attr.__name__ != 'connect':
+				if not self.conn.is_connected() and attr.__name__ != 'connect':
 					raise ConnectionError('No está conectado')
 
 				result = attr(*args, **kwargs)
@@ -23,42 +23,42 @@ class Microredes(object):
 	def connect(self, port, baudrate):
 		self.conn.connect(port, baudrate)
 
-	def initBuffer(self):
-		self.conn.initCanListener()
+	def init_buffer(self):
+		self.conn.init_can_listener()
 
-	def stopBuffer(self):
-		self.conn.stopCanListener()
+	def stop_buffer(self):
+		self.conn.stop_can_listener()
 
-	def genArray(self, msg):
+	def gen_array(self, msg):
 		arr = [msg['function'], msg['origin'], msg['target'], msg['variable']] + msg['data']
 		return arr
 
-	def genMsg(self, function, variable, data = [0, 0, 0, 0, 0, 0]):
+	def gen_msg(self, function, variable, data = [0, 0, 0, 0, 0, 0]):
 		return {
 			'function': int(function, 0),
-			'origin': masterAddr,
+			'origin': master_address,
 			'target': self.addr,
 			'variable': int(variable, 0),
 			'data': data
 		}
 
-	def canSend(self, arr, interval):
-		arbitrationId = (arr[0] << 5) | arr[1]
+	def can_send(self, arr, interval):
+		arbitration_id = (arr[0] << 5) | arr[1]
 
-		dataLow = arr[2:6][::-1]
-		dataHigh = arr[6:10][::-1]
-		envio = dataLow + dataHigh
+		data_low = arr[2:6][::-1]
+		data_high = arr[6:10][::-1]
+		envio = data_low + data_high
 
-		self.conn.sendCmd(arbitrationId, envio, interval)
+		self.conn.send_cmd(arbitration_id, envio, interval)
 
-	def canRead(self):
-		return self.conn.readFromBus()
+	def can_read(self):
+		return self.conn.read_from_bus()
 
-	def execQuery(self, msg, interval=0):
-		queryArray = self.genArray(msg)
-		self.canSend(queryArray, interval)
+	def exec_query(self, msg, interval=0):
+		query_array = self.gen_array(msg)
+		self.can_send(query_array, interval)
 
-	def doDigitalOut(self, pin, mode):
+	def do_digital_out(self, pin, mode):
 		"""
 			Enciende/Apaga salida digital indicada.
 
@@ -69,31 +69,31 @@ class Microredes(object):
 			print('ERROR: Los pines digitales están comprendidos entre el 2 y el 9')
 			return
 
-		dataArray = [pin, int(mode), 0, 0, 0, 0]
-		msg = self.genMsg(functions['DO'], variables['DIGITAL_OUT'], dataArray)
+		data_array = [pin, int(mode), 0, 0, 0, 0]
+		msg = self.gen_msg(functions['DO'], variables['DIGITAL_OUT'], data_array)
 
-		self.execQuery(msg)
+		self.exec_query(msg)
 
-	def qryDigitalIn(self, interval=0):
+	def qry_digital_in(self, interval=0):
 		"""
 			Recupera estado de los pines digitales.
 		"""
-		msg = self.genMsg(functions['QRY'], variables['DIGITAL_IN'])
+		msg = self.gen_msg(functions['QRY'], variables['DIGITAL_IN'])
 
-		self.execQuery(msg, interval)
+		self.exec_query(msg, interval)
 
-	def qryAnalogIn(self, pin, interval=0):
+	def qry_analog_in(self, pin, interval=0):
 		"""
 			Recupera valor del pin analógico pasado por parámetro.
 
 			pin: int, PIN [0-7].
 		"""
-		dataArray = [pin, 0, 0, 0, 0, 0]
-		msg = self.genMsg(functions['QRY'], variables['ANALOG_IN'], dataArray)
+		data_array = [pin, 0, 0, 0, 0, 0]
+		msg = self.gen_msg(functions['QRY'], variables['ANALOG_IN'], data_array)
 
-		self.execQuery(msg, interval)
+		self.exec_query(msg, interval)
 
-	def doAnalogOut(self, pin, steps):
+	def do_analog_out(self, pin, steps):
 		"""
 			Setea salida del DAC.
 
@@ -108,12 +108,12 @@ class Microredes(object):
 			print('ERROR: El valor no puede ser mayor a 4095')
 			return
 
-		dataArray = [pin, 0, 0, 0, 0, 0] # TODO: Pasar a bytes los steps
-		msg = self.genMsg(functions['DO'], variables['ANALOG_OUT'], dataArray)
+		data_array = [pin, 0, 0, 0, 0, 0] # TODO: Pasar a bytes los steps
+		msg = self.gen_msg(functions['DO'], variables['ANALOG_OUT'], data_array)
 
-		self.execQuery(msg)
+		self.exec_query(msg)
 
-	def setModoFunc(self, mode):
+	def set_modo_func(self, mode):
 		"""
 			Setea el modo de funcionamiento de la placa.
 
@@ -123,12 +123,12 @@ class Microredes(object):
 			print('ERROR: Los modos disponibles están comprendidos entre el 0 y el 4')
 			return
 
-		dataArray = [mode, 0, 0, 0, 0, 0]
-		msg = self.genMsg(functions['SET'], variables['MODO_FUNC'], dataArray)
+		data_array = [mode, 0, 0, 0, 0, 0]
+		msg = self.gen_msg(functions['SET'], variables['MODO_FUNC'], data_array)
 
-		self.execQuery(msg)
+		self.exec_query(msg)
 
-	def setAnalog(self, cantCan):
+	def set_analog(self, cantCan):
 		"""
 			Setea cantidad de canales analógicos.
 
@@ -138,12 +138,12 @@ class Microredes(object):
 			print('ERROR: Los modos disponibles están comprendidos entre el 1 y el 8')
 			return
 
-		dataArray = [cantCan, 0, 0, 0, 0, 0]
-		msg = self.genMsg(functions['SET'], variables['ANALOG'], dataArray)
+		data_array = [cantCan, 0, 0, 0, 0, 0]
+		msg = self.gen_msg(functions['SET'], variables['ANALOG'], data_array)
 
-		self.execQuery(msg)
+		self.exec_query(msg)
 
-	def setInAmp(self, cantCan):
+	def set_in_amp(self, cantCan):
 		"""
 			Setea cantidad de canales in-Amp.
 
@@ -153,12 +153,12 @@ class Microredes(object):
 			print('ERROR: Los modos disponibles están comprendidos entre el 1 y el 4')
 			return
 
-		dataArray = [cantCan, 0, 0, 0, 0, 0]
-		msg = self.genMsg(functions['SET'], variables['IN-AMP'], dataArray)
+		data_array = [cantCan, 0, 0, 0, 0, 0]
+		msg = self.gen_msg(functions['SET'], variables['IN-AMP'], data_array)
 
-		self.execQuery(msg)
+		self.exec_query(msg)
 
-	def setAmpInAmp(self, pin, amp):
+	def set_amp_in_amp(self, pin, amp):
 		"""
 			Setea amplificación de canales in-Amp.
 
@@ -173,12 +173,12 @@ class Microredes(object):
 			print('ERROR: La amplificación es un valor comprendido entre el 0 y el 3')
 			return
 
-		dataArray = [pin, amp, 0, 0, 0, 0]
-		msg = self.genMsg(functions['SET'], variables['AMP-INAMP'], dataArray)
+		data_array = [pin, amp, 0, 0, 0, 0]
+		msg = self.gen_msg(functions['SET'], variables['AMP-INAMP'], data_array)
 
-		self.execQuery(msg)
+		self.exec_query(msg)
 
-	def doPwm(self, pin, duty):
+	def do_pwm(self, pin, duty):
 		"""
 			Habilita salida PWM.
 
@@ -193,12 +193,12 @@ class Microredes(object):
 			print('ERROR: El duty cycle debe ser un valor entre 0 y 255')
 			return
 
-		dataArray = [pin, duty, 0, 0, 0, 0]
-		msg = self.genMsg(functions['DO'], variables['PWM'], dataArray)
+		data_array = [pin, duty, 0, 0, 0, 0]
+		msg = self.gen_msg(functions['DO'], variables['PWM'], data_array)
 
-		self.execQuery(msg)
+		self.exec_query(msg)
 
-	def hbEcho(self, char):
+	def hb_echo(self, char):
 		"""
 			Devuelve el mismo valor pasado por parámetro. Sirve a modo de heartbeat.
 
@@ -208,30 +208,30 @@ class Microredes(object):
 			print('ERROR: El valor de estar comprendido entre 0 y 127')
 			return
 
-		dataArray = [char, 0, 0, 0, 0, 0]
-		msg = self.genMsg(functions['HB'], variables['ECHO'], dataArray)
+		data_array = [char, 0, 0, 0, 0, 0]
+		msg = self.gen_msg(functions['HB'], variables['ECHO'], data_array)
 
-		return self.execQuery(msg)
+		return self.exec_query(msg)
 
-	def setRTC(self, date, hour): # TODO: Terminar esta función
+	def set_rtc(self, date, hour): # TODO: Terminar esta función
 		"""
 			Setea la fecha y hora en el RTC del equipo.
 
 			date: string, Fecha en formato dd/mm/aa.
 			hour: string, Hora en formato hh:mm:ss.
 		"""
-		parsedDate = date.split('/')
-		parsedHour = hour.split(':')
-		dd, mm, aa = parsedDate
-		hh, MM, ss = parsedHour
+		parsed_date = date.split('/')
+		parsed_hour = hour.split(':')
+		dd, mm, aa = parsed_date
+		hh, MM, ss = parsed_hour
 
-		if ((len(parsedDate) != 3) or
+		if ((len(parsed_date) != 3) or
 			(int(dd) > 31 or int(dd) < 1) or
 			(int(mm) > 12 or int(mm) < 1)):
 			print('ERROR: Formato de fecha incorrecto')
 			return
 
-		if ((len(parsedHour) != 3) or
+		if ((len(parsed_hour) != 3) or
 			(int(hh) > 24 or int(hh) < 1) or
 			(int(MM) > 60 or int(MM) < 0) or
 			(int(ss) > 60 or int(ss) < 0)):
@@ -239,36 +239,36 @@ class Microredes(object):
 			return
 
 		# Hora
-		dataArray = [int(hh[0]), int(hh[1]), int(MM[0]), int(MM[1]), int(ss[0]), int(ss[1])]
-		msg = self.genMsg(functions['SET'], variables['RTC'], dataArray)
+		data_array = [int(hh[0]), int(hh[1]), int(MM[0]), int(MM[1]), int(ss[0]), int(ss[1])]
+		msg = self.gen_msg(functions['SET'], variables['RTC'], data_array)
 
 		# Fecha
-		self.execQuery(msg)
-		dataArray = [int(dd[0]), int(dd[1]), int(mm[0]), int(mm[1]), int(aa[0]), int(aa[1])]
-		msg = self.genMsg(functions['SET'], variables['RTC'], dataArray)
+		self.exec_query(msg)
+		data_array = [int(dd[0]), int(dd[1]), int(mm[0]), int(mm[1]), int(aa[0]), int(aa[1])]
+		msg = self.gen_msg(functions['SET'], variables['RTC'], data_array)
 
-		self.execQuery(msg)
+		self.exec_query(msg)
 
-	def qryRTC(self, interval=0):
+	def qry_rtc(self, interval=0):
 		"""
 			Recupera fecha y hora del RTC del equipo.
 		"""
-		msg = self.genMsg(functions['QRY'], variables['RTC'])
+		msg = self.gen_msg(functions['QRY'], variables['RTC'])
 
-		self.execQuery(msg, interval)
+		self.exec_query(msg, interval)
 
-	def doParada(self):
+	def do_parada(self):
 		"""
 			Detiene todas las interrupciones y lecturas del equipo.
 		"""
-		msg = self.genMsg(functions['DO'], variables['PARADA'])
+		msg = self.gen_msg(functions['DO'], variables['PARADA'])
 
-		self.execQuery(msg)
+		self.exec_query(msg)
 
-	def doSoftReset(self):
+	def do_soft_reset(self):
 		"""
 			Reinicia el equipo.
 		"""
-		msg = self.genMsg(functions['DO'], variables['SOFT_RESET'])
+		msg = self.gen_msg(functions['DO'], variables['SOFT_RESET'])
 
-		self.execQuery(msg)
+		self.exec_query(msg)

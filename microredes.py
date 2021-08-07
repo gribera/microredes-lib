@@ -36,19 +36,24 @@ class Microredes(object):
 			'data': data
 		}
 
-	def canSend(self, arr):
+	def canSend(self, arr, interval):
 		arbitrationId = (arr[0] << 5) | arr[1]
 
 		dataLow = arr[2:6][::-1]
 		dataHigh = arr[6:10][::-1]
 		envio = dataLow + dataHigh
 
-		return self.conn.sendCmd(arbitrationId, envio)
+		if interval > 0:
+			self.conn.sendPeriodic(arbitrationId, envio, interval)
+		else:
+			self.conn.sendCmd(arbitrationId, envio)
 
-	def execQuery(self, msg):
+	def canRead(self):
+		return self.conn.readFromBus()
+
+	def execQuery(self, msg, interval=0):
 		queryArray = self.genArray(msg)
-		response = self.canSend(queryArray)
-		return response
+		self.canSend(queryArray, interval)
 
 	def doDigitalOut(self, pin, mode):
 		"""
@@ -66,15 +71,15 @@ class Microredes(object):
 
 		self.execQuery(msg)
 
-	def qryDigitalIn(self):
+	def qryDigitalIn(self, interval=0):
 		"""
 			Recupera estado de los pines digitales.
 		"""
 		msg = self.genMsg(functions['QRY'], variables['DIGITAL_IN'])
 
-		return self.execQuery(msg)
+		self.execQuery(msg, interval)
 
-	def qryAnalogIn(self, pin):
+	def qryAnalogIn(self, pin, interval=0):
 		"""
 			Recupera valor del pin analógico pasado por parámetro.
 
@@ -83,7 +88,7 @@ class Microredes(object):
 		dataArray = [pin, 0, 0, 0, 0, 0]
 		msg = self.genMsg(functions['QRY'], variables['ANALOG_IN'], dataArray)
 
-		return self.execQuery(msg)
+		self.execQuery(msg, interval)
 
 	def doAnalogOut(self, pin, steps):
 		"""
@@ -241,13 +246,13 @@ class Microredes(object):
 
 		self.execQuery(msg)
 
-	def qryRTC(self):
+	def qryRTC(self, interval=0):
 		"""
 			Recupera fecha y hora del RTC del equipo.
 		"""
 		msg = self.genMsg(functions['QRY'], variables['RTC'])
 
-		return self.execQuery(msg)
+		self.execQuery(msg, interval)
 
 	def doParada(self):
 		"""

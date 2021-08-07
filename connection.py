@@ -16,7 +16,7 @@ class Connection(object):
 	bus = None
 	thread = None
 	connected = False
-	timeout = 10
+	timeout = 0.01
 
 	def __init__(self):
 		pass
@@ -44,16 +44,19 @@ class Connection(object):
 
 		return ports
 
-	def sendCmd(self, id, comando):
-		comando = can.Message(arbitration_id=id, data=comando, is_extended_id=False)
-		self.bus.send(comando)
-		return self.readFromBus()
+	def sendCmd(self, id, query):
+		msg = can.Message(arbitration_id=id, data=query, is_extended_id=False)
+		self.bus.send(msg)
+
+	def sendPeriodic(self, id, query, interval):
+		msg = can.Message(arbitration_id=id, data=query, is_extended_id=False)
+		self.bus.send_periodic(msg, interval)
 
 	def readFromBus(self):
 		arrData = []
-		timeout = time.time() + self.timeout / 1000
+		timeout = time.time() + self.timeout
 		while time.time() < timeout:
-		    m = self.canListener.get_message(0.01)
+		    m = self.canListener.get_message(self.timeout)
 
 		    if m is None:
 		    	break

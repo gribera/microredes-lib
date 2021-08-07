@@ -1,6 +1,4 @@
-import can, queue, serial.tools.list_ports, threading
-import serial # Sacar esta línea cuando se use USB-CAN
-import time
+import can, queue, serial.tools.list_ports, threading, time
 
 def singleton(cls):
 	instances = dict()
@@ -18,15 +16,16 @@ class Connection(object):
 	bus = None
 	thread = None
 	connected = False
-	timeout = 100
+	timeout = 10
 
 	def __init__(self):
 		pass
 
 	def connect(self, port, baudrate, bitrate=250000):
-		# self.bus = can.interface.Bus(bustype='robotell', channel=port, ttyBaudrate=baudrate, bitrate=bitrate)
-		self.bus = serial.Serial(port=port, baudrate=baudrate, timeout=1)
+		self.bus = can.interface.Bus(bustype='robotell', channel=port, ttyBaudrate=baudrate, bitrate=bitrate)
 		self.connected = True
+		self.canListener = can.BufferedReader()
+		self.notifier = can.Notifier(self.bus, [self.canListener])
 
 	def isConnected(self):
 		return self.connected
@@ -46,31 +45,22 @@ class Connection(object):
 		return ports
 
 	def sendCmd(self, id, comando):
-		# comando = can.Message(arbitration_id=id, data=comando, is_extended_id=False)
-		# self.bus.send(comando)
-
-		self.bus.write(comando)
+		comando = can.Message(arbitration_id=id, data=comando, is_extended_id=False)
+		self.bus.send(comando)
 		return self.readFromBus()
 
 	def readFromBus(self):
-		# self.q.put(var) # Esta es para serial, vuela con CAN-BUS
-		# msg = self.bus.recv()
-		# if msg is not None:
-		# 	self.q.put(msg)
-
+		arrData = []
 		timeout = time.time() + self.timeout / 1000
+		while time.time() < timeout:
+		    m = self.canListener.get_message(0.01)
 
-		rsp = ""
-		while True:
-			msg = self.bus.readline().decode()
-			if msg:
-				rsp += msg
+		    if m is None:
+		    	break
 
-			# Salida por timeout
-			if time.time() > timeout:
-				break
+		    arrData.append(m.data)
 
-		return rsp
+		return arrData
 
 	def getPorts(self):
 		ports = []

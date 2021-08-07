@@ -23,6 +23,12 @@ class Microredes(object):
 	def connect(self, port, baudrate):
 		self.conn.connect(port, baudrate)
 
+	def initBuffer(self):
+		self.conn.initCanListener()
+
+	def stopBuffer(self):
+		self.conn.stopCanListener()
+
 	def genArray(self, msg):
 		arr = [msg['function'], msg['origin'], msg['target'], msg['variable']] + msg['data']
 		return arr
@@ -43,10 +49,7 @@ class Microredes(object):
 		dataHigh = arr[6:10][::-1]
 		envio = dataLow + dataHigh
 
-		if interval > 0:
-			self.conn.sendPeriodic(arbitrationId, envio, interval)
-		else:
-			self.conn.sendCmd(arbitrationId, envio)
+		self.conn.sendCmd(arbitrationId, envio, interval)
 
 	def canRead(self):
 		return self.conn.readFromBus()

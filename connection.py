@@ -1,4 +1,4 @@
-import can, queue, serial.tools.list_ports, threading, time
+import can, queue, serial.tools.list_ports, time
 
 def singleton(cls):
 	instances = dict()
@@ -14,7 +14,8 @@ def singleton(cls):
 @singleton
 class Connection(object):
 	bus = None
-	thread = None
+	canListener = None
+	notifier = None
 	connected = False
 	timeout = 0.01
 
@@ -24,8 +25,7 @@ class Connection(object):
 	def connect(self, port, baudrate, bitrate=250000):
 		self.bus = can.interface.Bus(bustype='robotell', channel=port, ttyBaudrate=baudrate, bitrate=bitrate)
 		self.connected = True
-		self.canListener = can.BufferedReader()
-		self.notifier = can.Notifier(self.bus, [self.canListener])
+		self.initCanListener()
 
 	def isConnected(self):
 		return self.connected
@@ -37,6 +37,14 @@ class Connection(object):
 		self.connected = False
 		self.bus.close()
 
+	def initCanListener(self):
+		self.canListener = can.BufferedReader()
+		self.notifier = can.Notifier(self.bus, [self.canListener])
+
+	def stopCanListener(self):
+		self.canListener.stop()
+		self.notifier.stop()
+
 	def getPorts(self):
 		ports = []
 		for x in serial.tools.list_ports.comports():
@@ -44,26 +52,26 @@ class Connection(object):
 
 		return ports
 
-	def sendCmd(self, id, query):
+	def sendCmd(self, id, query, interval=0):
 		msg = can.Message(arbitration_id=id, data=query, is_extended_id=False)
-		self.bus.send(msg)
-
-	def sendPeriodic(self, id, query, interval):
-		msg = can.Message(arbitration_id=id, data=query, is_extended_id=False)
-		self.bus.send_periodic(msg, interval)
+		if interval > 0:
+			self.bus.send_periodic(msg, interval)
+		else:
+			self.bus.send(msg)
 
 	def readFromBus(self):
 		arrData = []
 		timeout = time.time() + self.timeout
 		while time.time() < timeout:
-		    m = self.canListener.get_message(self.timeout)
+		    msg = self.canListener.get_message(self.timeout)
 
-		    if m is None:
+		    if msg is None:
 		    	break
 
-		    arrData.append(m.data)
+		    arrData.append(msg)
 
 		return arrData
+
 
 	def getPorts(self):
 		ports = []

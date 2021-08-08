@@ -52,7 +52,7 @@ class Microredes(object):
 		self.conn.send_cmd(arbitration_id, envio, interval)
 
 	def can_read(self):
-		return self.conn.read_from_bus()
+		return self.conn.read_from_bus(self.addr)
 
 	def exec_query(self, msg, interval=0):
 		query_array = self.gen_array(msg)
@@ -128,32 +128,32 @@ class Microredes(object):
 
 		self.exec_query(msg)
 
-	def set_analog(self, cantCan):
+	def set_analog(self, cant_can):
 		"""
 			Setea cantidad de canales analógicos.
 
-			cantCan: int, Cantidad de canales analógicos a habilitar [1-8].
+			cant_can: int, Cantidad de canales analógicos a habilitar [1-8].
 		"""
 		if pin < 1 or pin > 8:
 			print('ERROR: Los modos disponibles están comprendidos entre el 1 y el 8')
 			return
 
-		data_array = [cantCan, 0, 0, 0, 0, 0]
+		data_array = [cant_can, 0, 0, 0, 0, 0]
 		msg = self.gen_msg(functions['SET'], variables['ANALOG'], data_array)
 
 		self.exec_query(msg)
 
-	def set_in_amp(self, cantCan):
+	def set_in_amp(self, cant_can):
 		"""
 			Setea cantidad de canales in-Amp.
 
-			cantCan: int, Cantidad de canales in-Amp a habilitar [1-4].
+			cant_can: int, Cantidad de canales in-Amp a habilitar [1-4].
 		"""
 		if pin < 1 or pin > 4:
 			print('ERROR: Los modos disponibles están comprendidos entre el 1 y el 4')
 			return
 
-		data_array = [cantCan, 0, 0, 0, 0, 0]
+		data_array = [cant_can, 0, 0, 0, 0, 0]
 		msg = self.gen_msg(functions['SET'], variables['IN-AMP'], data_array)
 
 		self.exec_query(msg)

@@ -60,7 +60,7 @@ class Connection(object):
 		else:
 			self.bus.send(msg)
 
-	def read_from_bus(self, id_equipo):
+	def read_from_bus(self, eq_id):
 		timeout = time.time() + self.timeout
 		while time.time() < timeout:
 		    msg = self.can_listener.get_message(self.timeout)
@@ -70,17 +70,21 @@ class Connection(object):
 
 		    self.buffer.append(msg)
 
-		filtered_buffer = self.buffer_filter(id_equipo)
+		filtered_buffer = self.buffer_filter(eq_id)
 
 		return filtered_buffer
 
-	def buffer_filter(self, id_equipo):
+	def buffer_filter(self, eq_id):
 		arr = []
+		# Busca los mensajes en el buffer que corresponden al id del equipo
 		for x in self.buffer:
 			msg_id = x.arbitration_id & 0x1F
-			if msg_id == id_equipo:
-				self.buffer.pop(self.buffer.index(x))
+			if msg_id == eq_id:
 				arr.append(x)
+
+		# Borra los mensajes del buffer
+		for x in arr:
+			self.buffer.pop(self.buffer.index(x))
 
 		return arr
 

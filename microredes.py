@@ -1,5 +1,6 @@
 import connection as conn
 from constants import master_address, functions, variables
+from datetime import datetime
 
 class Microredes(object):
 	def __init__(self, addr, equipo):
@@ -213,7 +214,7 @@ class Microredes(object):
 
 		return self.exec_query(msg)
 
-	def set_rtc(self, date, hour): # TODO: Terminar esta función
+	def set_rtc(self, date, hour):
 		"""
 			Setea la fecha y hora en el RTC del equipo.
 

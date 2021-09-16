@@ -53,7 +53,51 @@ class Microredes(object):
 		self.conn.send_cmd(arbitration_id, envio, interval)
 
 	def can_read(self):
-		return self.conn.read_from_bus(self.addr)
+		return self.msg_parse(self.conn.read_from_bus(self.addr))
+
+	def parse_msg(self, msg):
+	    origen = hex(msg.arbitration_id & 0x1F)
+	    funcion = msg.arbitration_id >> 5
+	    lst_data = [hex(x) for x in msg.data]
+	    data_low = lst_data[0:4][::-1]
+	    data_high = lst_data[4:8][::-1]
+	    str_data = data_low + data_high
+	    str_funcion = list(functions.keys())[list(functions.values()).index(hex(funcion))]
+	    timestamp = datetime.fromtimestamp(msg.timestamp).strftime('%H:%M:%S')
+	    variable = msg.data[2]
+	    valor = self.calcular_valor(variable, data_low, data_high)
+	    return origen, str_funcion, str_data, timestamp, variable, valor
+
+	def msg_parse(self, msgs):
+		ret = []
+		multiple = True if len(msgs) > 1 else False
+		data = [] if multiple else None
+		timestamp = None
+		origen = None
+		valor_final = ''
+
+		if len(msgs) > 0:
+			if multiple:
+				ret.append({
+					'origen': '',
+					'data': [],
+					'valor': ''
+					})
+				for msg in msgs:
+					origen, str_funcion, str_data, timestamp, variable, valor = self.parse_msg(msg)
+
+					ret[0]['origen'] = origen
+					ret[0]['data'].append(str_data)
+					ret[0]['valor'] = ret[0]['valor'] + valor + ' '
+			else:
+				origen, str_funcion, str_data, timestamp, variable, valor = self.parse_msg(msgs[0])
+				ret.append({
+					'origen': origen,
+					'data': str_data,
+					'valor': valor
+				})
+
+		return ret
 
 	def exec_query(self, msg, interval=0):
 		query_array = self.gen_array(msg)
@@ -273,3 +317,126 @@ class Microredes(object):
 		msg = self.gen_msg(functions['DO'], variables['SOFT_RESET'])
 
 		self.exec_query(msg)
+
+
+
+
+	def calcular_valor(self, variable, data_low, data_high):
+		calc_datetime = [0x0a]
+		calc_can_analog = [0x03]
+		calc_urms = [0x10, 0x11, 0x12]
+		calc_irms = [0x13, 0x14, 0x15]
+		calc_irms_n = [0x16]
+		calc_p_mean = [0x17, 0x18, 0x19]
+		calc_p_mean_t = [0x1a]
+		calc_q_mean = [0x1b, 0x1c, 0x1d]
+		calc_q_mean_t = [0x1e]
+		calc_s_mean = [0x1f, 0x20, 0x21]
+		calc_s_mean_t = [0x22]
+		calc_pf_mean = [0x23, 0x24, 0x25, 0x26]
+		calc_thdu = [0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c]
+		calc_frec = [0x2d]
+		calc_temp = [0x2e]
+
+		valor = 0
+		valor_final = None
+		value_low = int('0x' + ''.join([format(int(c, 16), '02X') for c in data_low[2:4]]), 16)
+		value_high = int('0x' + ''.join([format(int(c, 16), '02X') for c in data_high[0:1]]), 16)
+
+		sign = ''
+
+		if variable in calc_urms:
+			valor = 0.01*(value_low+value_high/256)
+			unidad = 'v'
+		elif variable in calc_irms:
+			valor = 0.001*(value_low+value_high/256)
+			unidad = 'A'
+		elif variable in calc_irms_n:
+			valor = 0.001*value_low
+			unidad = 'A'
+		elif variable in calc_p_mean:
+			sign, value_low, value_high = self.calc(data_low[2:4], data_high[0:1])
+			valor = value_low + value_high / 256
+			unidad = 'W'
+		elif variable in calc_p_mean_t:
+			sign, value_low, value_high = self.calc(data_low[2:4], data_high[0:1])
+			valor = 4*(value_low + value_high / 256)
+			unidad = 'W'
+		elif variable in calc_q_mean:
+			sign, value_low, value_high = self.calc(data_low[2:4], data_high[0:1])
+			valor = value_low + value_high / 256
+			unidad = 'VAr'
+		elif variable in calc_q_mean_t:
+			sign, value_low, value_high = self.calc(data_low[2:4], data_high[0:1])
+			valor = 4*(value_low + value_high / 256)
+			unidad = 'VAr'
+		elif variable in calc_s_mean:
+			sign, value_low, value_high = self.calc(data_low[2:4], data_high[0:1])
+			valor = value_low + value_high / 256
+			unidad = 'VA'
+		elif variable in calc_s_mean_t:
+			sign, value_low, value_high = self.calc(data_low[2:4], data_high[0:1])
+			valor = 4*(value_low + value_high / 256)
+			unidad = 'VA'
+		elif variable in calc_pf_mean:
+			sign, value_low, value_high = self.calc(data_low[2:4], data_high[0:1])
+			valor = 0.001*(value_low + value_high / 256)
+			unidad = 'W'
+		elif variable in calc_thdu:
+			valor = 0.01*(value_low)
+			unidad = '%'
+		elif variable in calc_frec:
+			valor = value_low/100
+			unidad = 'Hz'
+		elif variable in calc_temp:
+			valor = value_low
+			unidad = 'C'
+		elif variable in calc_datetime:
+			valor_final = self.hex_to_str(data_low[2]) + self.hex_to_str(data_low[3]) + self.hex_to_str(data_high[0]) + self.hex_to_str(data_high[1]) + self.hex_to_str(data_high[2]) + self.hex_to_str(data_high[3])
+		elif variable in calc_can_analog:
+			# value_low = int('0x' + ''.join([format(int(c, 16), '02X') for c in data_low[2:4]]), 16)
+			# value_high = int('0x' + ''.join([format(int(c, 16), '02X') for c in data_high[0:1]]), 16)
+
+			val1 = int('0x' + ''.join([format(int(c, 16), '02X') for c in data_low[2:4]]), 16)
+			val2 = int('0x' + ''.join([format(int(c, 16), '02X') for c in data_low[2:4]]), 16)
+			valor_final = (((val1*255) + val2) / 4096) * 3.3
+			# val = val1 << 8
+			# print(valor_final)
+		else:
+			pass
+			# print("La función " + str(variable) + " es incorrecta")
+
+		# Redondea el valor a 3 decimales y lo devuelve en formato string junto con su unidad de medida
+		if valor:
+			valor_final = sign + str(round(valor, 3)) + ' ' + unidad
+
+		return valor_final
+
+	def calc(self, data_low, data_high):
+		sign, val = self.twos_complement(data_low + data_high, 32)
+		rsl = self.str_to_hex(val)
+		val1 = int('0x' + ''.join([format(int(c, 16), '02X') for c in rsl[0:2]]), 16)
+		val2 = int('0x' + ''.join([format(int(c, 16), '02X') for c in rsl[2:4]]), 16)
+		return sign, val1, val2
+
+	def twos_complement(self, value, bits):
+		# Se pasa a hexa el valor recibido
+		val = int('0x' + ''.join([format(int(c, 16), '02X') for c in value]), 16)
+		# Cálculo del complemento a 2
+		if (val & (1 << (bits - 1))) != 0:
+			val = val - (1 << bits)
+
+		sign = '-' if val < 0 else ''
+
+		return sign, abs(val)
+
+	def str_to_hex(self, value):
+		# Convierto a hexadecimal y elimino '0x' del string
+		val = hex(value)[2:]
+		# Agrego ceros a la izquierda para completar los 4 bytes
+		filled_value = val.zfill(8)
+		# Devuelve array de valores agrupado de a dos
+		return [hex(int(filled_value[i:i+2], 16)) for i in range(0, len(filled_value), 2)]
+
+	def hex_to_str(self, hex_str):
+		return str(int(hex_str, 0))

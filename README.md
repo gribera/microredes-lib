@@ -10,7 +10,7 @@
 |  DO  | do_parada      | -                                                                                                          | Detiene todas las interrupciones y lecturas del equipo.                  |
 |  DO  | do_soft_reset  | -                                                                                                          | Reinicia el equipo.                                                      |
 | QRY  | qry_digital_in | -                                                                                                          | Recupera estado de los pines digitales.                                  |
-| QRY  | qey_analog_in  | **pin** (int) Pin [0-7]                                                                                    | Recupera valor del pin analógico pasado por parámetro.                   |
+| QRY  | qry_analog_in  | **pin** (int) Pin [0-7]                                                                                    | Recupera valor del pin analógico pasado por parámetro.                   |
 | QRY  | qry_rtc        | -                                                                                                          | Recupera fecha y hora del RTC del equipo.                                |
 | SET  | set_modo_func  | **mode** (int) Modo de trabajo [0-4]                                                                       | Setea el modo de funcionamiento de la placa.                             |
 | SET  | set_analog     | **cant_can** (int) Cantidad de canales analógicos a habilitar [1-8]                                        | Setea cantidad de canales analógicos.                                    |

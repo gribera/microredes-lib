@@ -1,4 +1,4 @@
-import can, queue, serial.tools.list_ports, time
+import can, serial.tools.list_ports, time
 
 def singleton(cls):
 	instances = dict()
@@ -23,7 +23,7 @@ class Connection(object):
 	def __init__(self):
 		pass
 
-	def connect(self, port, baudrate, bitrate=250000):
+	def connect(self, port, baudrate, bitrate):
 		self.bus = can.interface.Bus(bustype='robotell', channel=port, ttyBaudrate=baudrate, bitrate=bitrate)
 		self.connected = True
 		self.init_can_listener()

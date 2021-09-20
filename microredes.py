@@ -29,7 +29,7 @@ class Microredes(object):
             'data': data
         }
 
-    def exec_query(self, msg, interval=0):
+    def exec_query(self, msg, interval: int = 0):
         query_array = self.gen_array(msg)
         self.can_send(query_array, interval)
 
@@ -41,7 +41,6 @@ class Microredes(object):
 
     def can_read(self):
         return self.msg_parse(self.conn.read_from_bus(self.target))
-        # return self.conn.read_from_bus(self.target)
 
     def parse_msg(self, msg):
         origen = hex(msg.arbitration_id & 0x1F)
@@ -49,44 +48,26 @@ class Microredes(object):
         lst_data = [hex(x) for x in msg.data]
         data_low = lst_data[0:4][::-1]
         data_high = lst_data[4:8][::-1]
-        str_data = data_low + data_high
-        str_funcion = list(functions.keys())[list(functions.values()).index(hex(funcion))]
-        timestamp = datetime.fromtimestamp(msg.timestamp).strftime('%H:%M:%S')
+        data = data_low + data_high
+        status_code = list(functions.keys())[list(functions.values()).index(hex(funcion))]
+        timestamp = datetime.fromtimestamp(msg.timestamp).isoformat(" ")
         variable = msg.data[2]
         valor = self.calcular_valor(variable, data_low, data_high)
-        return origen, str_funcion, str_data, timestamp, variable, valor
+        return {
+                'origen': origen,
+                'status': status_code,
+                'timestamp': timestamp,
+                'data': data,
+                'valor': valor
+            }
 
     def msg_parse(self, msgs):
         ret = []
-        multiple = True if len(msgs) > 1 else False
-        data = [] if multiple else None
-        timestamp = None
-        origen = None
-        valor_final = ''
-
-        if len(msgs) > 0:
-            if multiple:
-                ret.append({
-                    'origen': '',
-                    'data': [],
-                    'valor': ''
-                    })
-                for msg in msgs:
-                    origen, str_funcion, str_data, timestamp, variable, valor = self.parse_msg(msg)
-
-                    ret[0]['origen'] = origen
-                    ret[0]['data'].append(str_data)
-                    ret[0]['valor'] = ret[0]['valor'] + valor + ' '
-            else:
-                origen, str_funcion, str_data, timestamp, variable, valor = self.parse_msg(msgs[0])
-                ret.append({
-                    'origen': origen,
-                    'data': str_data,
-                    'valor': valor
-                })
+        for msg in msgs:
+            parsed_msg = self.parse_msg(msg)
+            ret.append(parsed_msg)
 
         return ret
-
 
     def do_digital_out(self, pin: int, mode: bool) -> None:
         """
@@ -104,7 +85,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_digital_in(self, interval: int = 0):
+    def qry_digital_in(self, interval: int = 0) -> None:
         """
             Recupera estado de los pines digitales.
         """
@@ -112,7 +93,7 @@ class Microredes(object):
 
         self.exec_query(msg, interval)
 
-    def qry_analog_in(self, pin, interval=0):
+    def qry_analog_in(self, pin: int, interval: int = 0) -> None:
         """
             Recupera valor del pin analógico pasado por parámetro.
 
@@ -123,7 +104,7 @@ class Microredes(object):
 
         self.exec_query(msg, interval)
 
-    def do_analog_out(self, pin, steps):
+    def do_analog_out(self, pin: int, steps: int) -> None:
         """
             Setea salida del DAC.
 
@@ -173,7 +154,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def set_in_amp(self, cant_can):
+    def set_in_amp(self, cant_can: int) -> None:
         """
             Setea cantidad de canales in-Amp.
 
@@ -188,7 +169,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def set_amp_in_amp(self, pin, amp):
+    def set_amp_in_amp(self, pin: int, amp: int) -> None:
         """
             Setea amplificación de canales in-Amp.
 
@@ -208,7 +189,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def do_pwm(self, pin, duty):
+    def do_pwm(self, pin: int, duty: int) -> None:
         """
             Habilita salida PWM.
 
@@ -228,13 +209,13 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def hb_echo(self, char):
+    def hb_echo(self, char: int) -> None:
         """
             Devuelve el mismo valor pasado por parámetro. Sirve a modo de heartbeat.
 
             char: int, Valor [0-127].
         """
-        if char < 0 or char > 255:
+        if char < 0 or char > 127:
             print('ERROR: El valor de estar comprendido entre 0 y 127')
             return
 
@@ -243,7 +224,7 @@ class Microredes(object):
 
         return self.exec_query(msg)
 
-    def set_rtc(self, date, hour):
+    def set_rtc(self, date: str, hour: str) -> None:
         """
             Setea la fecha y hora en el RTC del equipo.
 
@@ -279,7 +260,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_rtc(self, interval=0):
+    def qry_rtc(self, interval: int = 0) -> None:
         """
             Recupera fecha y hora del RTC del equipo.
         """
@@ -287,7 +268,7 @@ class Microredes(object):
 
         self.exec_query(msg, interval)
 
-    def do_parada(self):
+    def do_parada(self) -> None:
         """
             Detiene todas las interrupciones y lecturas del equipo.
         """
@@ -295,7 +276,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def do_soft_reset(self):
+    def do_soft_reset(self) -> None:
         """
             Reinicia el equipo.
         """
@@ -376,12 +357,8 @@ class Microredes(object):
         elif variable in calc_datetime:
             valor_final = self.hex_to_str(data_low[2]) + self.hex_to_str(data_low[3]) + self.hex_to_str(data_high[0]) + self.hex_to_str(data_high[1]) + self.hex_to_str(data_high[2]) + self.hex_to_str(data_high[3])
         elif variable in calc_can_analog:
-            # value_low = int('0x' + ''.join([format(int(c, 16), '02X') for c in data_low[2:4]]), 16)
-            # value_high = int('0x' + ''.join([format(int(c, 16), '02X') for c in data_high[0:1]]), 16)
-
-            val1 = int('0x' + ''.join([format(int(c, 16), '02X') for c in data_low[2:4]]), 16)
-            val2 = int('0x' + ''.join([format(int(c, 16), '02X') for c in data_low[2:4]]), 16)
-            valor_final = (((val1*255) + val2) / 4096) * 3.3
+            valor_final = (((value_low*255) + value_low) / 4096) * 3.3
+            unidad = 'v'
             # val = val1 << 8
             # print(valor_final)
         else:

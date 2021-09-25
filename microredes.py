@@ -1,4 +1,5 @@
 import connection as conn
+import calc_helper as cal
 from constants import master_address, functions, variables
 from datetime import datetime
 
@@ -42,23 +43,32 @@ class Microredes(object):
     def can_read(self):
         return self.msg_parse(self.conn.read_from_bus(self.target))
 
+    def byte_array_to_list(self, bytearray: bytearray) -> list:
+        # Convierte de bytearray a lista
+        lst_data = [hex(x) for x in bytearray]
+        # Recupera la parte baja del mensaje y la da vuelta
+        data_low = lst_data[0:4][::-1]
+        # Recupera la parte alta del mensaje y la da vuelta
+        data_high = lst_data[4:8][::-1]
+        return data_low + data_high
+
     def parse_msg(self, msg):
         origen = hex(msg.arbitration_id & 0x1F)
         funcion = msg.arbitration_id >> 5
-        lst_data = [hex(x) for x in msg.data]
-        data_low = lst_data[0:4][::-1]
-        data_high = lst_data[4:8][::-1]
-        data = data_low + data_high
+        lst_data = self.byte_array_to_list(msg.data)
         status_code = list(functions.keys())[list(functions.values()).index(hex(funcion))]
         timestamp = datetime.fromtimestamp(msg.timestamp).isoformat(" ")
         variable = msg.data[2]
-        valor = self.calcular_valor(variable, data_low, data_high)
+
+        calc_helper = cal.CalcHelper()
+        valor, unidad = calc_helper.calc_value(variable, lst_data)
         return {
                 'origen': origen,
                 'status': status_code,
                 'timestamp': timestamp,
-                'data': data,
-                'valor': valor
+                'data': lst_data,
+                'valor': valor,
+                'unidad': unidad
             }
 
     def msg_parse(self, msgs):
@@ -284,118 +294,3 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def calcular_valor(self, variable, data_low, data_high):
-        calc_datetime = [0x0a]
-        calc_can_analog = [0x03]
-        calc_urms = [0x10, 0x11, 0x12]
-        calc_irms = [0x13, 0x14, 0x15]
-        calc_irms_n = [0x16]
-        calc_p_mean = [0x17, 0x18, 0x19]
-        calc_p_mean_t = [0x1a]
-        calc_q_mean = [0x1b, 0x1c, 0x1d]
-        calc_q_mean_t = [0x1e]
-        calc_s_mean = [0x1f, 0x20, 0x21]
-        calc_s_mean_t = [0x22]
-        calc_pf_mean = [0x23, 0x24, 0x25, 0x26]
-        calc_thdu = [0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c]
-        calc_frec = [0x2d]
-        calc_temp = [0x2e]
-
-        valor = 0
-        valor_final = None
-        value_low = int('0x' + ''.join([format(int(c, 16), '02X') for c in data_low[2:4]]), 16)
-        value_high = int('0x' + ''.join([format(int(c, 16), '02X') for c in data_high[0:1]]), 16)
-
-        sign = ''
-
-        if variable in calc_urms:
-            valor = 0.01*(value_low+value_high/256)
-            unidad = 'v'
-        elif variable in calc_irms:
-            valor = 0.001*(value_low+value_high/256)
-            unidad = 'A'
-        elif variable in calc_irms_n:
-            valor = 0.001*value_low
-            unidad = 'A'
-        elif variable in calc_p_mean:
-            sign, value_low, value_high = self.calc(data_low[2:4], data_high[0:1])
-            valor = value_low + value_high / 256
-            unidad = 'W'
-        elif variable in calc_p_mean_t:
-            sign, value_low, value_high = self.calc(data_low[2:4], data_high[0:1])
-            valor = 4*(value_low + value_high / 256)
-            unidad = 'W'
-        elif variable in calc_q_mean:
-            sign, value_low, value_high = self.calc(data_low[2:4], data_high[0:1])
-            valor = value_low + value_high / 256
-            unidad = 'VAr'
-        elif variable in calc_q_mean_t:
-            sign, value_low, value_high = self.calc(data_low[2:4], data_high[0:1])
-            valor = 4*(value_low + value_high / 256)
-            unidad = 'VAr'
-        elif variable in calc_s_mean:
-            sign, value_low, value_high = self.calc(data_low[2:4], data_high[0:1])
-            valor = value_low + value_high / 256
-            unidad = 'VA'
-        elif variable in calc_s_mean_t:
-            sign, value_low, value_high = self.calc(data_low[2:4], data_high[0:1])
-            valor = 4*(value_low + value_high / 256)
-            unidad = 'VA'
-        elif variable in calc_pf_mean:
-            sign, value_low, value_high = self.calc(data_low[2:4], data_high[0:1])
-            valor = 0.001*(value_low + value_high / 256)
-            unidad = 'W'
-        elif variable in calc_thdu:
-            valor = 0.01*(value_low)
-            unidad = '%'
-        elif variable in calc_frec:
-            valor = value_low/100
-            unidad = 'Hz'
-        elif variable in calc_temp:
-            valor = value_low
-            unidad = 'C'
-        elif variable in calc_datetime:
-            valor_final = self.hex_to_str(data_low[2]) + self.hex_to_str(data_low[3]) + self.hex_to_str(data_high[0]) + self.hex_to_str(data_high[1]) + self.hex_to_str(data_high[2]) + self.hex_to_str(data_high[3])
-        elif variable in calc_can_analog:
-            valor_final = (((value_low*255) + value_low) / 4096) * 3.3
-            unidad = 'v'
-            # val = val1 << 8
-            # print(valor_final)
-        else:
-            pass
-            # print("La función " + str(variable) + " es incorrecta")
-
-        # Redondea el valor a 3 decimales y lo devuelve en formato string junto con su unidad de medida
-        if valor:
-            valor_final = sign + str(round(valor, 3)) + ' ' + unidad
-
-        return valor_final
-
-    def calc(self, data_low, data_high):
-        sign, val = self.twos_complement(data_low + data_high, 32)
-        rsl = self.str_to_hex(val)
-        val1 = int('0x' + ''.join([format(int(c, 16), '02X') for c in rsl[0:2]]), 16)
-        val2 = int('0x' + ''.join([format(int(c, 16), '02X') for c in rsl[2:4]]), 16)
-        return sign, val1, val2
-
-    def twos_complement(self, value, bits):
-        # Se pasa a hexa el valor recibido
-        val = int('0x' + ''.join([format(int(c, 16), '02X') for c in value]), 16)
-        # Cálculo del complemento a 2
-        if (val & (1 << (bits - 1))) != 0:
-            val = val - (1 << bits)
-
-        sign = '-' if val < 0 else ''
-
-        return sign, abs(val)
-
-    def str_to_hex(self, value):
-        # Convierto a hexadecimal y elimino '0x' del string
-        val = hex(value)[2:]
-        # Agrego ceros a la izquierda para completar los 4 bytes
-        filled_value = val.zfill(8)
-        # Devuelve array de valores agrupado de a dos
-        return [hex(int(filled_value[i:i+2], 16)) for i in range(0, len(filled_value), 2)]
-
-    def hex_to_str(self, hex_str):
-        return str(int(hex_str, 0))

@@ -8,20 +8,40 @@ class Microredes(object):
         self.conn = conn.Connection()
         self.conn.connect(port, baudrate, bitrate)
 
-    def can_send(self, arr, interval):
+    def can_send(self, arr: list, interval: int):
+        """
+            Envia la consulta al BUS CAN.
+
+            arr: list, Array con los datos de la consulta a enviar.
+            interval: int, Intervalo de repetición de la consulta,
+                           en caso de ser 0 ejecuta una sola.
+        """
         arbitration_id = (arr[0] << 5) | arr[1]
 
+        # Da vuelta los valores low y high para el envío
         data_low = arr[2:6][::-1]
         data_high = arr[6:10][::-1]
         envio = data_low + data_high
 
         self.conn.send_cmd(arbitration_id, envio, interval)
 
-    def gen_array(self, msg):
+    def gen_array(self, msg: dict) -> list:
+        """
+            Genera array para la consulta CAN.
+
+            msg: dict, Objeto con los datos de la consulta.
+        """
         arr = [msg['function'], msg['origin'], msg['target'], msg['variable']] + msg['data']
         return arr
 
-    def gen_msg(self, function, variable, data = [0, 0, 0, 0, 0, 0]):
+    def gen_msg(self, function: int, variable: int, data: list = [0, 0, 0, 0, 0, 0]) -> dict:
+        """
+            Genera objeto con la estructura para el envío
+
+            function: int, Función a ejecutar.
+            variable: int, Variable a consultar.
+            data: list, Array con los datos a enviar.
+        """
         return {
             'function': int(function, 0),
             'origin': master_address,
@@ -30,7 +50,13 @@ class Microredes(object):
             'data': data
         }
 
-    def exec_query(self, msg, interval: int = 0):
+    def exec_query(self, msg, interval: int = 0) -> None:
+        """
+            Genera un array para la consulta a partir del objeto de envío
+            y llama a la función can_send.
+
+            msg: dict, Objeto con los datos para el envío del mensaje.
+        """
         query_array = self.gen_array(msg)
         self.can_send(query_array, interval)
 
@@ -40,7 +66,10 @@ class Microredes(object):
         """
         self.target = target
 
-    def can_read(self):
+    def can_read(self) -> list:
+        """
+            Lee el BUS CAN.
+        """
         return self.msg_parse(self.conn.read_from_bus(self.target))
 
     def byte_array_to_list(self, bytearray: bytearray) -> list:
@@ -52,7 +81,13 @@ class Microredes(object):
         data_high = lst_data[4:8][::-1]
         return data_low + data_high
 
-    def parse_msg(self, msg):
+    def parse_msg(self, msg: list) -> dict:
+        """
+            Parsea el mensaje distinguiendo origen, funcion, cuerpo del mensaje y llama a
+            la función de calculo de valor. Luego devuelve objeto de mensaje parseado.
+
+            msg: list, Mensaje recibido por BUS CAN.
+        """
         origen = hex(msg.arbitration_id & 0x1F)
         funcion = msg.arbitration_id >> 5
         lst_data = self.byte_array_to_list(msg.data)
@@ -71,7 +106,13 @@ class Microredes(object):
                 'unidad': unidad
             }
 
-    def msg_parse(self, msgs):
+    def msg_parse(self, msgs: list) -> list:
+        """
+            Recorre los mensajes encontrados en el bus, llama a la función de parseo
+            y devuelva una lista con todos los mensajes encontrados.
+
+            msgs: list, Lista de mensajes provenientes del BUS CAN.
+        """
         ret = []
         for msg in msgs:
             parsed_msg = self.parse_msg(msg)
@@ -83,8 +124,8 @@ class Microredes(object):
         """
             Enciende/Apaga salida digital indicada.
 
-            pin : int, PIN [2-9].
-            mode : boolean, True enciende, False apaga.
+            pin: int, PIN [2-9].
+            mode: boolean, True enciende, False apaga.
         """
         if pin < 2 or pin > 9:
             print('ERROR: Los pines digitales están comprendidos entre el 2 y el 9')
@@ -294,3 +335,218 @@ class Microredes(object):
 
         self.exec_query(msg)
 
+    def qry_u_a(self) -> None:
+        """
+            Recupera tensión F1.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['U_A'])
+
+        self.exec_query(msg)
+
+    def qry_u_b(self) -> None:
+        """
+            Recupera tensión F2.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['U_B'])
+
+        self.exec_query(msg)
+
+    def qry_u_c(self) -> None:
+        """
+            Recupera tensión F3.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['U_C'])
+
+        self.exec_query(msg)
+
+    def qry_i_a(self) -> None:
+        """
+            Recupera corriente F1.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['I_A'])
+
+        self.exec_query(msg)
+
+    def qry_i_b(self) -> None:
+        """
+            Recupera corriente F2.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['I_B'])
+
+        self.exec_query(msg)
+
+    def qry_i_c(self) -> None:
+        """
+            Recupera corriente F3.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['I_C'])
+
+        self.exec_query(msg)
+
+    def qry_i_n1(self) -> None:
+        """
+            Recupera corriente N.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['I_N1'])
+
+        self.exec_query(msg)
+
+    def qry_pa_a(self) -> None:
+        """
+            Recupera potencia activa F1.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['PA_A'])
+
+        self.exec_query(msg)
+
+    def qry_pa_b(self) -> None:
+        """
+            Recupera potencia activa F2.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['PA_B'])
+
+        self.exec_query(msg)
+
+    def qry_pa_c(self) -> None:
+        """
+            Recupera potencia activa F3.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['PA_C'])
+
+        self.exec_query(msg)
+
+    def qry_pa_tot(self) -> None:
+        """
+            Recupera potencia activa total.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['PA_TOT'])
+
+        self.exec_query(msg)
+
+    def qry_pr_a(self) -> None:
+        """
+            Recupera potencia reactiva F1.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['PR_A'])
+
+        self.exec_query(msg)
+
+    def qry_pr_b(self) -> None:
+        """
+            Recupera potencia reactiva F2.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['PR_B'])
+
+        self.exec_query(msg)
+
+    def qry_pr_c(self) -> None:
+        """
+            Recupera potencia reactiva F3.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['PR_C'])
+
+        self.exec_query(msg)
+
+    def qry_pr_tot(self) -> None:
+        """
+            Recupera potencia reactiva total.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['PR_TOT'])
+
+        self.exec_query(msg)
+
+    def qry_fp_a(self) -> None:
+        """
+            Recupera factor de potencia F1.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['FP_A'])
+
+        self.exec_query(msg)
+
+    def qry_fp_b(self) -> None:
+        """
+            Recupera factor de potencia F2.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['FP_B'])
+
+        self.exec_query(msg)
+
+    def qry_fp_c(self) -> None:
+        """
+            Recupera factor de potencia F3.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['FP_C'])
+
+        self.exec_query(msg)
+
+    def qry_fp_tot(self) -> None:
+        """
+            Recupera factor de potencia total.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['FP_TOT'])
+
+        self.exec_query(msg)
+
+    def qry_thdu_a(self) -> None:
+        """
+            Recupera distorsion armónica en tensión F1.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['THDU_A'])
+
+        self.exec_query(msg)
+
+    def qry_thdu_b(self) -> None:
+        """
+            Recupera distorsion armónica en tensión F2.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['THDU_B'])
+
+        self.exec_query(msg)
+
+    def qry_thdu_c(self) -> None:
+        """
+            Recupera distorsion armónica en tensión F3.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['THDU_C'])
+
+        self.exec_query(msg)
+
+    def qry_thdi_a(self) -> None:
+        """
+            Recupera distorsion armónica en corriente F1.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['THDI_A'])
+
+        self.exec_query(msg)
+
+    def qry_thdi_b(self) -> None:
+        """
+            Recupera distorsion armónica en corriente F2.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['THDI_B'])
+
+        self.exec_query(msg)
+
+    def qry_thdi_c(self) -> None:
+        """
+            Recupera distorsion armónica en corriente F3.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['THDI_C'])
+
+        self.exec_query(msg)
+
+    def qry_frec(self) -> None:
+        """
+            Recupera frecuencia.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['FREC'])
+
+        self.exec_query(msg)
+
+    def qry_temp(self) -> None:
+        """
+            Recupera temperatura.
+        """
+        msg = self.gen_msg(functions['QRY'], variables['TEMP'])
+
+        self.exec_query(msg)

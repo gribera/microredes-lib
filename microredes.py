@@ -335,7 +335,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_u_a(self) -> None:
+    def qry_u_a(self, interval: int = 0) -> None:
         """
             Recupera tensión F1.
         """
@@ -343,7 +343,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_u_b(self) -> None:
+    def qry_u_b(self, interval: int = 0) -> None:
         """
             Recupera tensión F2.
         """
@@ -351,7 +351,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_u_c(self) -> None:
+    def qry_u_c(self, interval: int = 0) -> None:
         """
             Recupera tensión F3.
         """
@@ -359,7 +359,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_i_a(self) -> None:
+    def qry_i_a(self, interval: int = 0) -> None:
         """
             Recupera corriente F1.
         """
@@ -367,7 +367,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_i_b(self) -> None:
+    def qry_i_b(self, interval: int = 0) -> None:
         """
             Recupera corriente F2.
         """
@@ -375,7 +375,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_i_c(self) -> None:
+    def qry_i_c(self, interval: int = 0) -> None:
         """
             Recupera corriente F3.
         """
@@ -383,7 +383,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_i_n1(self) -> None:
+    def qry_i_n1(self, interval: int = 0) -> None:
         """
             Recupera corriente N.
         """
@@ -391,7 +391,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_pa_a(self) -> None:
+    def qry_pa_a(self, interval: int = 0) -> None:
         """
             Recupera potencia activa F1.
         """
@@ -399,7 +399,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_pa_b(self) -> None:
+    def qry_pa_b(self, interval: int = 0) -> None:
         """
             Recupera potencia activa F2.
         """
@@ -407,7 +407,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_pa_c(self) -> None:
+    def qry_pa_c(self, interval: int = 0) -> None:
         """
             Recupera potencia activa F3.
         """
@@ -415,7 +415,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_pa_tot(self) -> None:
+    def qry_pa_tot(self, interval: int = 0) -> None:
         """
             Recupera potencia activa total.
         """
@@ -423,7 +423,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_pr_a(self) -> None:
+    def qry_pr_a(self, interval: int = 0) -> None:
         """
             Recupera potencia reactiva F1.
         """
@@ -431,7 +431,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_pr_b(self) -> None:
+    def qry_pr_b(self, interval: int = 0) -> None:
         """
             Recupera potencia reactiva F2.
         """
@@ -439,7 +439,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_pr_c(self) -> None:
+    def qry_pr_c(self, interval: int = 0) -> None:
         """
             Recupera potencia reactiva F3.
         """
@@ -447,7 +447,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_pr_tot(self) -> None:
+    def qry_pr_tot(self, interval: int = 0) -> None:
         """
             Recupera potencia reactiva total.
         """
@@ -455,7 +455,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_fp_a(self) -> None:
+    def qry_fp_a(self, interval: int = 0) -> None:
         """
             Recupera factor de potencia F1.
         """
@@ -463,7 +463,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_fp_b(self) -> None:
+    def qry_fp_b(self, interval: int = 0) -> None:
         """
             Recupera factor de potencia F2.
         """
@@ -471,7 +471,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_fp_c(self) -> None:
+    def qry_fp_c(self, interval: int = 0) -> None:
         """
             Recupera factor de potencia F3.
         """
@@ -479,7 +479,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_fp_tot(self) -> None:
+    def qry_fp_tot(self, interval: int = 0) -> None:
         """
             Recupera factor de potencia total.
         """
@@ -487,7 +487,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_thdu_a(self) -> None:
+    def qry_thdu_a(self, interval: int = 0) -> None:
         """
             Recupera distorsion armónica en tensión F1.
         """
@@ -495,7 +495,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_thdu_b(self) -> None:
+    def qry_thdu_b(self, interval: int = 0) -> None:
         """
             Recupera distorsion armónica en tensión F2.
         """
@@ -503,7 +503,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_thdu_c(self) -> None:
+    def qry_thdu_c(self, interval: int = 0) -> None:
         """
             Recupera distorsion armónica en tensión F3.
         """
@@ -511,7 +511,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_thdi_a(self) -> None:
+    def qry_thdi_a(self, interval: int = 0) -> None:
         """
             Recupera distorsion armónica en corriente F1.
         """
@@ -519,7 +519,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_thdi_b(self) -> None:
+    def qry_thdi_b(self, interval: int = 0) -> None:
         """
             Recupera distorsion armónica en corriente F2.
         """
@@ -527,7 +527,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_thdi_c(self) -> None:
+    def qry_thdi_c(self, interval: int = 0) -> None:
         """
             Recupera distorsion armónica en corriente F3.
         """
@@ -535,7 +535,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_frec(self) -> None:
+    def qry_frec(self, interval: int = 0) -> None:
         """
             Recupera frecuencia.
         """
@@ -543,7 +543,7 @@ class Microredes(object):
 
         self.exec_query(msg)
 
-    def qry_temp(self) -> None:
+    def qry_temp(self, interval: int = 0) -> None:
         """
             Recupera temperatura.
         """

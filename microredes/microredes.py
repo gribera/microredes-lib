@@ -1,6 +1,6 @@
-import connection as conn
-import calc_helper as cal
-from constants import master_address, functions, variables
+import microredes.connection as conn
+import microredes.calc_helper as cal
+from microredes.constants import master_address, functions, variables
 from datetime import datetime
 
 class Microredes(object):

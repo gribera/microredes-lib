@@ -134,9 +134,8 @@ class Microredes(object):
             mode: boolean, True enciende, False apaga.
         """
         if pin < 2 or pin > 9:
-            print('ERROR: Los pines digitales están comprendidos'
+            raise ValueError('ERROR: Los pines digitales están comprendidos'
                   + 'entre el 2 y el 9')
-            return
 
         data_array = [pin, int(mode), 0, 0, 0, 0]
         msg = self.gen_msg(functions['DO'],
@@ -159,6 +158,9 @@ class Microredes(object):
 
             pin: int, PIN [0-7].
         """
+        if pin < 0 or pin > 7:
+            raise ValueError('ERROR: Los pines analógicos sólo pueden ser 0 o 7')
+
         data_array = [pin, 0, 0, 0, 0, 0]
         msg = self.gen_msg(functions['QRY'],
                            variables['ANALOG_IN'],
@@ -174,12 +176,10 @@ class Microredes(object):
             steps: int, Valor a setear como salida del DAC [0-4095].
         """
         if pin < 0 or pin > 1:
-            print('ERROR: Los pines del DAC sólo pueden ser 0 o 1')
-            return
+            raise ValueError('ERROR: Los pines del DAC sólo pueden ser 0 o 1')
 
         if steps < 0 or steps > 4095:
-            print('ERROR: El valor no puede ser mayor a 4095')
-            return
+            raise ValueError('ERROR: El valor no puede ser mayor a 4095')
 
         data_array = [pin, 0, 0, 0, 0, 0]  # TODO: Pasar a bytes los steps
         msg = self.gen_msg(functions['DO'],
@@ -195,9 +195,8 @@ class Microredes(object):
             mode: int, Modo de trabajo de la placa [1-5].
         """
         if mode < 1 or mode > 4:
-            print('ERROR: Los modos disponibles están comprendidos'
+            raise ValueError('ERROR: Los modos disponibles están comprendidos'
                   + 'entre el 1 y el 5')
-            return
 
         data_array = [mode, 0, 0, 0, 0, 0]
         msg = self.gen_msg(functions['SET'],
@@ -213,8 +212,8 @@ class Microredes(object):
             cant_can: int, Cantidad de canales analógicos a habilitar [1-8].
         """
         if cant_can < 1 or cant_can > 8:
-            print('ERROR: La cantidad de canales analógicos es entre 1 y 8')
-            return
+            raise ValueError('ERROR: La cantidad de canales analógicos'
+                             + 'es entre 1 y 8')
 
         data_array = [cant_can, 0, 0, 0, 0, 0]
         msg = self.gen_msg(functions['SET'], variables['ANALOG'], data_array)
@@ -228,8 +227,8 @@ class Microredes(object):
             cant_can: int, Cantidad de canales in-Amp a habilitar [1-4].
         """
         if cant_can < 1 or cant_can > 4:
-            print('ERROR: La cantidad de canales in-Amp es entre 1 y 4')
-            return
+            raise ValueError('ERROR: La cantidad de canales in-Amp'
+                             + 'es entre 1 y 4')
 
         data_array = [cant_can, 0, 0, 0, 0, 0]
         msg = self.gen_msg(functions['SET'], variables['IN-AMP'], data_array)
@@ -244,14 +243,12 @@ class Microredes(object):
             amp: int, Amplificación [0-3].
         """
         if pin < 9 or pin > 12:
-            print('ERROR: Los canales in-Amp están comprendidos'
+            raise ValueError('ERROR: Los canales in-Amp están comprendidos'
                   + 'entre el 9 y el 12')
-            return
 
         if amp < 0 or amp > 3:
-            print('ERROR: La amplificación es un valor comprendido'
+            raise ValueError('ERROR: La amplificación es un valor comprendido'
                   + 'entre el 0 y el 3')
-            return
 
         data_array = [pin, amp, 0, 0, 0, 0]
         msg = self.gen_msg(functions['SET'],
@@ -268,13 +265,12 @@ class Microredes(object):
             duty: int, Duty-Cycle [0-255].
         """
         if pin < 10 or pin > 13:
-            print('ERROR: Los pines PWM deben estar comprendidos'
+            raise ValueError('ERROR: Los pines PWM deben estar comprendidos'
                   + 'entre el 10 y el 13')
-            return
 
         if duty < 0 or duty > 255:
-            print('ERROR: El duty cycle debe ser un valor entre 0 y 255')
-            return
+            raise ValueError('ERROR: El duty cycle debe ser un valor'
+                             + 'entre 0 y 255')
 
         data_array = [pin, duty, 0, 0, 0, 0]
         msg = self.gen_msg(functions['DO'], variables['PWM'], data_array)
@@ -289,8 +285,8 @@ class Microredes(object):
             char: int, Valor [0-127].
         """
         if char < 0 or char > 127:
-            print('ERROR: El valor de estar comprendido entre 0 y 127')
-            return
+            raise ValueError('ERROR: El valor de estar comprendido'
+                             + 'entre 0 y 127')
 
         data_array = [char, 0, 0, 0, 0, 0]
         msg = self.gen_msg(functions['HB'], variables['ECHO'], data_array)
@@ -312,15 +308,13 @@ class Microredes(object):
         if ((len(parsed_date) != 3)
                 or (int(dd) > 31 or int(dd) < 1)
                 or (int(mm) > 12 or int(mm) < 1)):
-            print('ERROR: Formato de fecha incorrecto')
-            return
+            raise ValueError('ERROR: Formato de fecha incorrecto')
 
         if ((len(parsed_hour) != 3)
                 or (int(hh) > 24 or int(hh) < 1)
                 or (int(MM) > 60 or int(MM) < 0)
                 or (int(ss) > 60 or int(ss) < 0)):
-            print('ERROR: Formato de hora incorrecto')
-            return
+            raise ValueError('ERROR: Formato de hora incorrecto')
 
         # Hora
         data_array = [int(hh[0]),

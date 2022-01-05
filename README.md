@@ -48,7 +48,7 @@ En el caso de las funciones de consulta (qry), existe un parámetro opcional que
 
 ```python3
 bus.set_target(2) # Setea la dirección de destino del equipo a consultar
-bus.qry_analog_in(0, interval=1) # Lee la entrada digital 0 con un intervalo de 1 segundo
+bus.qry_analog_in(0, interval=1) # Lee la entrada analógica 0 con un intervalo de 1 segundo
 
 while True: # Lee en bucle infinito la respuesta desde el BUS
   res = bus.can_read()

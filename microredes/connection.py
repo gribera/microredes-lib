@@ -21,7 +21,7 @@ class Connection(object):
     can_listener = None
     notifier = None
     connected = False
-    buffer = []
+    buffer = list()
     timeout = 0.01
 
     def __init__(self):
@@ -63,9 +63,9 @@ class Connection(object):
     def send_cmd(self, id, query, interval=0):
         msg = can.Message(arbitration_id=id, data=query, is_extended_id=False)
         if interval > 0:
-            self.bus.send_periodic(msg, interval)
+            return self.bus.send_periodic(msg, interval)
         else:
-            self.bus.send(msg)
+            return self.bus.send(msg)
 
     def read_from_bus(self, eq_id):
         timeout = time.time() + self.timeout

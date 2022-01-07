@@ -2,9 +2,12 @@ import microredes.connection as conn
 import microredes.calc_helper as cal
 from microredes.constants import master_address, functions, variables
 from datetime import datetime
+import uuid
 
 
 class Microredes(object):
+    listeners = dict()
+
     def __init__(self, port, baudrate, bitrate=250000):
         self.conn = conn.Connection()
         self.conn.connect(port, baudrate, bitrate)
@@ -25,7 +28,16 @@ class Microredes(object):
         data_high = arr[6:10][::-1]
         envio = data_low + data_high
 
-        self.conn.send_cmd(arbitration_id, envio, interval)
+        listener = self.conn.send_cmd(arbitration_id, envio, interval)
+
+        if listener:
+            uniq_id = uuid.uuid1()
+            self.listeners.update({uniq_id: listener})
+
+        return listener
+
+    def get_listeners(self):
+        return self.listeners
 
     def gen_array(self, msg):
         """
@@ -63,7 +75,7 @@ class Microredes(object):
             msg: dict, Objeto con los datos para el envío del mensaje.
         """
         query_array = self.gen_array(msg)
-        self.can_send(query_array, interval)
+        return self.can_send(query_array, interval)
 
     def set_target(self, target):
         """
@@ -142,7 +154,7 @@ class Microredes(object):
                            variables['DIGITAL_OUT'],
                            data_array)
 
-        self.exec_query(msg)
+        return self.exec_query(msg)
 
     def qry_digital_in(self, interval=0):
         """
@@ -150,7 +162,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['DIGITAL_IN'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_analog_in(self, pin, interval=0):
         """
@@ -159,14 +171,15 @@ class Microredes(object):
             pin: int, PIN [0-7].
         """
         if pin < 0 or pin > 7:
-            raise ValueError('ERROR: Los pines analógicos sólo pueden ser 0 o 7')
+            raise ValueError('ERROR: Los pines analógicos sólo'
+                             + 'pueden ser 0 o 7')
 
         data_array = [pin, 0, 0, 0, 0, 0]
         msg = self.gen_msg(functions['QRY'],
                            variables['ANALOG_IN'],
                            data_array)
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def do_analog_out(self, pin, steps):
         """
@@ -186,7 +199,7 @@ class Microredes(object):
                            variables['ANALOG_OUT'],
                            data_array)
 
-        self.exec_query(msg)
+        return self.exec_query(msg)
 
     def set_modo_func(self, mode):
         """
@@ -203,7 +216,7 @@ class Microredes(object):
                            variables['MODO_FUNC'],
                            data_array)
 
-        self.exec_query(msg)
+        return self.exec_query(msg)
 
     def set_analog(self, cant_can):
         """
@@ -218,7 +231,7 @@ class Microredes(object):
         data_array = [cant_can, 0, 0, 0, 0, 0]
         msg = self.gen_msg(functions['SET'], variables['ANALOG'], data_array)
 
-        self.exec_query(msg)
+        return self.exec_query(msg)
 
     def set_in_amp(self, cant_can):
         """
@@ -233,7 +246,7 @@ class Microredes(object):
         data_array = [cant_can, 0, 0, 0, 0, 0]
         msg = self.gen_msg(functions['SET'], variables['IN-AMP'], data_array)
 
-        self.exec_query(msg)
+        return self.exec_query(msg)
 
     def set_amp_in_amp(self, pin, amp):
         """
@@ -255,7 +268,7 @@ class Microredes(object):
                            variables['AMP-INAMP'],
                            data_array)
 
-        self.exec_query(msg)
+        return self.exec_query(msg)
 
     def do_pwm(self, pin, duty):
         """
@@ -275,7 +288,7 @@ class Microredes(object):
         data_array = [pin, duty, 0, 0, 0, 0]
         msg = self.gen_msg(functions['DO'], variables['PWM'], data_array)
 
-        self.exec_query(msg)
+        return self.exec_query(msg)
 
     def hb_echo(self, char):
         """
@@ -326,7 +339,7 @@ class Microredes(object):
         msg = self.gen_msg(functions['SET'], variables['RTC'], data_array)
 
         # Fecha
-        self.exec_query(msg)
+        return self.exec_query(msg)
         data_array = [int(dd[0]),
                       int(dd[1]),
                       int(mm[0]),
@@ -335,7 +348,7 @@ class Microredes(object):
                       int(aa[1])]
         msg = self.gen_msg(functions['SET'], variables['RTC'], data_array)
 
-        self.exec_query(msg)
+        return self.exec_query(msg)
 
     def qry_rtc(self, interval=0):
         """
@@ -343,7 +356,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['RTC'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def do_parada(self):
         """
@@ -351,7 +364,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['DO'], variables['PARADA'])
 
-        self.exec_query(msg)
+        return self.exec_query(msg)
 
     def do_soft_reset(self):
         """
@@ -359,7 +372,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['DO'], variables['SOFT_RESET'])
 
-        self.exec_query(msg)
+        return self.exec_query(msg)
 
     def qry_u_a(self, interval=0):
         """
@@ -367,7 +380,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['U_A'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_u_b(self, interval=0):
         """
@@ -375,7 +388,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['U_B'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_u_c(self, interval=0):
         """
@@ -383,7 +396,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['U_C'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_i_a(self, interval=0):
         """
@@ -391,7 +404,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['I_A'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_i_b(self, interval=0):
         """
@@ -399,7 +412,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['I_B'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_i_c(self, interval=0):
         """
@@ -407,7 +420,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['I_C'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_i_n1(self, interval=0):
         """
@@ -415,7 +428,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['I_N1'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_pa_a(self, interval=0):
         """
@@ -423,7 +436,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['PA_A'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_pa_b(self, interval=0):
         """
@@ -431,7 +444,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['PA_B'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_pa_c(self, interval=0):
         """
@@ -439,7 +452,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['PA_C'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_pa_tot(self, interval=0):
         """
@@ -447,7 +460,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['PA_TOT'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_pr_a(self, interval=0):
         """
@@ -455,7 +468,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['PR_A'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_pr_b(self, interval=0):
         """
@@ -463,7 +476,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['PR_B'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_pr_c(self, interval=0):
         """
@@ -471,7 +484,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['PR_C'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_pr_tot(self, interval=0):
         """
@@ -479,7 +492,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['PR_TOT'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_fp_a(self, interval=0):
         """
@@ -487,7 +500,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['FP_A'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_fp_b(self, interval=0):
         """
@@ -495,7 +508,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['FP_B'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_fp_c(self, interval=0):
         """
@@ -503,7 +516,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['FP_C'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_fp_tot(self, interval=0):
         """
@@ -511,7 +524,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['FP_TOT'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_thdu_a(self, interval=0):
         """
@@ -519,7 +532,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['THDU_A'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_thdu_b(self, interval=0):
         """
@@ -527,7 +540,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['THDU_B'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_thdu_c(self, interval=0):
         """
@@ -535,7 +548,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['THDU_C'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_thdi_a(self, interval=0):
         """
@@ -543,7 +556,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['THDI_A'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_thdi_b(self, interval=0):
         """
@@ -551,7 +564,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['THDI_B'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_thdi_c(self, interval=0):
         """
@@ -559,7 +572,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['THDI_C'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_frec(self, interval=0):
         """
@@ -567,7 +580,7 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['FREC'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)
 
     def qry_temp(self, interval=0):
         """
@@ -575,4 +588,4 @@ class Microredes(object):
         """
         msg = self.gen_msg(functions['QRY'], variables['TEMP'])
 
-        self.exec_query(msg, interval)
+        return self.exec_query(msg, interval)

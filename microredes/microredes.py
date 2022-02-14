@@ -21,6 +21,7 @@ class Microredes(object):
             interval: int, Intervalo de repetición de la consulta,
                            en caso de ser 0 ejecuta una sola.
         """
+        listener_id = ''
         arbitration_id = (arr[0] << 5) | arr[1]
 
         # Da vuelta los valores low y high para el envío
@@ -31,13 +32,16 @@ class Microredes(object):
         listener = self.conn.send_cmd(arbitration_id, envio, interval)
 
         if listener:
-            uniq_id = uuid.uuid1()
-            self.listeners.update({uniq_id: listener})
+            listener_id = str(uuid.uuid1().hex)
+            self.listeners.update({listener_id: listener})
 
-        return listener
+        return listener_id
 
     def get_listeners(self):
         return self.listeners
+
+    def stop_listener(self, listener_id):
+        self.listeners[listener_id].stop()
 
     def gen_array(self, msg):
         """

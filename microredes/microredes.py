@@ -341,9 +341,9 @@ class Microredes(object):
                       int(ss[0]),
                       int(ss[1])]
         msg = self.gen_msg(functions['SET'], variables['RTC'], data_array)
+        self.exec_query(msg)
 
         # Fecha
-        return self.exec_query(msg)
         data_array = [int(dd[0]),
                       int(dd[1]),
                       int(mm[0]),
